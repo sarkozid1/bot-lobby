@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: botlobby-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/botlobby
+    username: ${DB_USERNAME:botlobby}
+    password: ${DB_PASSWORD:botlobby}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+    open-in-view: false
+
+server:
+  port: 8080
+
+botlobby:
+  jwt:
+    # NE kerüljön be verziókezelésbe konkrét érték - mindig env változóból/secret store-ból jöjjön (pl. Docker secret, Vault, CI/CD env var).
+    secret: ${JWT_SECRET}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}   # alapértelmezés: 24 óra

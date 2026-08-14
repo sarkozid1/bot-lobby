@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<title>BotLobby API teszt-frontend</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, Segoe UI, Arial, sans-serif;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 16px 20px 80px;
+    background: #f2f3f5;
+    color: #1a1a1a;
+  }
+  h1 { font-size: 22px; }
+  h2 { font-size: 17px; margin: 0 0 10px; border-bottom: 2px solid #333; padding-bottom: 4px; }
+  h3 { font-size: 14px; margin: 14px 0 6px; color: #444; }
+  section.card {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 14px 18px 18px;
+    margin-bottom: 18px;
+  }
+  .block { border-top: 1px dashed #ccc; padding-top: 10px; margin-top: 10px; }
+  .block:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+  label { display: block; font-size: 12px; color: #555; margin-top: 6px; }
+  input[type=text], input[type=email], input[type=password], input[type=number],
+  input[type=datetime-local], input[type=date], select, textarea {
+    width: 100%;
+    max-width: 420px;
+    padding: 5px 7px;
+    font-size: 13px;
+    margin-top: 2px;
+    border: 1px solid #999;
+    border-radius: 4px;
+  }
+  textarea { max-width: 500px; min-height: 50px; font-family: inherit; }
+  button {
+    margin: 8px 6px 4px 0;
+    padding: 6px 14px;
+    font-size: 13px;
+    border: 1px solid #2a5a8c;
+    background: #3f7cb5;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  button:hover { background: #326a9e; }
+  button.secondary { background: #6b7280; border-color: #4b5563; }
+  button.secondary:hover { background: #565e69; }
+  button.danger { background: #b5423f; border-color: #8c2a2a; }
+  button.danger:hover { background: #9e3230; }
+  pre {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 10px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    max-height: 260px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-top: 6px;
+  }
+  table { border-collapse: collapse; width: 100%; margin-top: 6px; font-size: 12px; }
+  table th, table td { border: 1px solid #ddd; padding: 4px 6px; text-align: left; }
+  table th { background: #eee; }
+  #topbar {
+    position: sticky; top: 0; z-index: 10;
+    background: #222; color: #fff;
+    padding: 10px 16px; border-radius: 6px; margin-bottom: 18px;
+    display: flex; flex-wrap: wrap; gap: 14px; align-items: center; font-size: 13px;
+  }
+  #topbar input[type=text] { max-width: 260px; margin-top: 0; }
+  #topbar label { color: #ccc; margin-top: 0; }
+  #tokenStatus { font-family: monospace; word-break: break-all; }
+  .ok { color: #4caf50; }
+  .bad { color: #f44336; }
+  .hint { font-size: 11px; color: #777; margin-top: 2px; }
+  #chatLiveMessages { list-style: none; padding: 0; margin: 6px 0; max-height: 200px; overflow: auto; }
+  #chatLiveMessages li { padding: 4px 6px; border-bottom: 1px solid #eee; font-size: 13px; }
+  #wsStatusLine { font-size: 12px; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<h1>BotLobby &ndash; API teszt-frontend</h1>
+<p class="hint">Egyetlen statikus HTML, semmi build. Cel: az osszes vegpont + a WS chat manualis kiprobalasa Android kliens elott.</p>
+
+<div id="topbar">
+  <div>
+    <label for="baseUrlInput">Backend base URL</label>
+    <input type="text" id="baseUrlInput" value="http://localhost:8080">
+  </div>
+  <div>
+    <div>Token allapot: <span id="tokenStatus" class="bad">nincs bejelentkezve</span></div>
+  </div>
+  <button class="secondary" onclick="clearToken()">Token torlese</button>
+</div>
+
+<!-- ============ 1. AUTH ============ -->
+<section class="card">
+  <h2>1. Auth</h2>
+
+  <div class="block">
+    <h3>Regisztracio</h3>
+    <label>Nev</label><input type="text" id="regName" value="Teszt Elek">
+    <label>Email</label><input type="email" id="regEmail" value="teszt1@example.com">
+    <label>Jelszo</label><input type="password" id="regPassword" value="password123">
+    <br>
+    <button onclick="doRegister()">Regisztracio</button>
+    <pre id="registerResult">-</pre>
+  </div>
+
+  <div class="block">
+    <h3>Bejelentkezes</h3>
+    <label>Email</label><input type="email" id="loginEmail" value="teszt1@example.com">
+    <label>Jelszo</label><input type="password" id="loginPassword" value="password123">
+    <br>
+    <button onclick="doLogin()">Bejelentkezes</button>
+    <pre id="loginResult">-</pre>
+  </div>
+</section>
+
+<!-- ============ 2. SPORTOK ============ -->
+<section class="card">
+  <h2>2. Sportok</h2>
+  <button onclick="loadSports()">Sportok lekerese</button>
+  <p class="hint">A lekert sportok automatikusan feltoltik az osszes sport-valaszto legordulot lejjebb.</p>
+  <ul id="sportsList"></ul>
+  <pre id="sportsResult">-</pre>
+</section>
+
+<!-- ============ 3. SAJAT PROFIL ============ -->
+<section class="card">
+  <h2>3. Sajat profil</h2>
+
+  <div class="block">
+    <h3>Profil lekerese</h3>
+    <button onclick="loadMe()">Profil lekerese (GET /api/users/me)</button>
+    <pre id="meResult">-</pre>
+  </div>
+
+  <div class="block">
+    <h3>Profil szerkesztese</h3>
+    <label>Nev</label><input type="text" id="updName" value="Teszt Elek">
+    <label>Varos</label><input type="text" id="updCity" value="Budapest">
+    <label>Profilkep URL</label><input type="text" id="updPic" value="">
+    <br>
+    <button onclick="updateMe()">Mentes (PUT /api/users/me)</button>
+    <pre id="updateMeResult">-</pre>
+  </div>
+
+  <div class="block">
+    <h3>Sport-profil hozzaadas / frissites</h3>
+    <label>Sport</label>
+    <select id="sportProfileSport" class="sport-select"></select>
+    <label>Skill szint</label>
+    <select id="sportProfileSkill">
+      <option>BEGINNER</option><option>INTERMEDIATE</option><option>ADVANCED</option><option>PRO</option>
+    </select>
+    <br>
+    <button onclick="upsertSportProfile()">Mentes (POST /api/users/me/sport-profiles)</button>
+    <pre id="sportProfileResult">-</pre>
+  </div>
+</section>
+
+<!-- ============ 4. LOBBYK ============ -->
+<section class="card">
+  <h2>4. Lobbyk</h2>
+
+  <div class="block">
+    <h3>Lobby letrehozasa</h3>
+    <label>Sport</label>
+    <select id="createLobbySport" class="sport-select"></select>
+    <label>Cim</label><input type="text" id="createLobbyTitle" value="Focizas pentek este">
+    <label>Leiras</label><textarea id="createLobbyDescription">Negyen vagyunk, kell meg ketto.</textarea>
+    <label>Varos</label><input type="text" id="createLobbyCity" value="Budapest">
+    <label>Kezdes</label><input type="datetime-local" id="createLobbyStart">
+    <label>Max letszam</label><input type="number" id="createLobbyMax" value="2" min="1">
+    <label>Min skill szint (opcionalis)</label>
+    <select id="createLobbySkill">
+      <option value="">(nincs megkotes)</option>
+      <option>BEGINNER</option><option>INTERMEDIATE</option><option>ADVANCED</option><option>PRO</option>
+    </select>
+    <br>
+    <button onclick="createLobby()">Letrehozas (POST /api/lobbies)</button>
+    <pre id="createLobbyResult">-</pre>
+  </div>
+
+  <div class="block">
+    <h3>Lobby lista / szures</h3>
+    <label>Sport (opcionalis)</label>
+    <select id="searchLobbySport" class="sport-select"><option value="">(mind)</option></select>
+    <label>Varos (opcionalis)</label><input type="text" id="searchLobbyCity" value="">
+    <label>Datum (opcionalis)</label><input type="date" id="searchLobbyDate">
+    <label>Min skill szint (opcionalis)</label>
+    <select id="searchLobbySkill">
+      <option value="">(mind)</option>
+      <option>BEGINNER</option><option>INTERMEDIATE</option><option>ADVANCED</option><option>PRO</option>
+    </select>
+    <br>
+    <button onclick="searchLobbies()">Lista lekerese (GET /api/lobbies)</button>
+    <table id="lobbyTable" style="display:none">
+      <thead><tr><th>id</th><th>cim</th><th>sport</th><th>varos</th><th>kezdes</th><th>letszam</th><th>status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <pre id="searchLobbyResult">-</pre>
+  </div>
+
+  <div class="block">
+    <h3>Lobby muveletek</h3>
+    <label>Lobby ID</label><input type="text" id="lobbyActionId" placeholder="masold be a fenti tablazatbol">
+    <br>
+    <button onclick="lobbyDetails()">Reszletek</button>
+    <button onclick="lobbyParticipants()">Reszvevok</button>
+    <button onclick="lobbyJoin()">Csatlakozas</button>
+    <button onclick="lobbyLeave()">Elhagyas</button>
+    <button class="danger" onclick="lobbyDelete()">Torles (cancel)</button>
+    <pre id="lobbyActionResult">-</pre>
+  </div>
+
+  <div class="block">
+    <h3>Jelentkezo elfogadas / elutasitas (szervezokent)</h3>
+    <label>Lobby ID</label><input type="text" id="participantLobbyId">
+    <label>Jelentkezo User ID</label><input type="text" id="participantUserId" placeholder="a Reszvevok listabol">
+    <br>
+    <button onclick="acceptParticipant()">Elfogad</button>
+    <button class="secondary" onclick="declineParticipant()">Elutasit</button>
+    <pre id="participantActionResult">-</pre>
+  </div>
+</section>
+
+<!-- ============ 5. CHAT ============ -->
+<section class="card">
+  <h2>5. Chat</h2>
+
+  <div class="block">
+    <h3>Elozmenyek (REST)</h3>
+    <label>Lobby ID</label><input type="text" id="chatHistoryLobbyId">
+    <br>
+    <button onclick="loadChatHistory()">Elozmenyek lekerese (GET /api/lobbies/{id}/messages)</button>
+    <pre id="chatHistoryResult">-</pre>
+  </div>
+
+  <div class="block">
+    <h3>Elo chat (WebSocket / STOMP over SockJS)</h3>
+    <p class="hint">Backend: SockJS endpoint <code>/ws</code>, kuldes <code>/app/lobbies/{id}/chat.send</code>, feliratkozas <code>/topic/lobbies/{id}</code>. A JWT a STOMP CONNECT frame Authorization headereben megy.</p>
+    <label>Lobby ID</label><input type="text" id="wsLobbyId">
+    <br>
+    <button onclick="connectChat()">Csatlakozas (WS)</button>
+    <button class="secondary" onclick="disconnectChat()">Levalasztas</button>
+    <div id="wsStatusLine">nincs kapcsolat</div>
+
+    <ul id="chatLiveMessages"></ul>
+
+    <label>Uzenet</label><input type="text" id="chatMessageInput" value="Sziasztok!">
+    <br>
+    <button onclick="sendChatMessage()">Kuldes (/app/lobbies/{id}/chat.send)</button>
+  </div>
+</section>
+
+<!-- ============ 6. ERTEKELES ============ -->
+<section class="card">
+  <h2>6. Ertekeles</h2>
+
+  <div class="block">
+    <h3>Ertekeles beadasa</h3>
+    <label>Lobby ID</label><input type="text" id="ratingLobbyId">
+    <label>Ertekelt User ID</label><input type="text" id="ratingUserId">
+    <label>Csillagok (1-5)</label><input type="number" id="ratingStars" value="5" min="1" max="5">
+    <label>Cimkek (vesszovel elvalasztva)</label><input type="text" id="ratingTags" value="pontos,baratsagos">
+    <label>Komment</label><textarea id="ratingComment">Jo volt vele jatszani.</textarea>
+    <label><input type="checkbox" id="ratingNoShow" style="width:auto"> Nem jelent meg (noShow)</label>
+    <br>
+    <button onclick="submitRating()">Ertekeles kuldese (POST /api/lobbies/{id}/ratings)</button>
+    <pre id="ratingResult">-</pre>
+  </div>
+
+  <div class="block">
+    <h3>Felhasznalo ertekelesei</h3>
+    <label>User ID</label><input type="text" id="userRatingsId">
+    <br>
+    <button onclick="loadUserRatings()">Ertekelesek lekerese (GET /api/users/{id}/ratings)</button>
+    <pre id="userRatingsResult">-</pre>
+  </div>
+</section>
+
+<!-- STOMP + SockJS UMD build-ek CDN-rol, nincs npm/build lepes -->
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+
+<script>
+// ============ ALLAPOT ============
+let jwtToken = null;
+let stompClient = null;
+let cachedSports = [];
+
+function baseUrl() {
+  return document.getElementById('baseUrlInput').value.trim().replace(/\/$/, '');
+}
+
+function setToken(token) {
+  jwtToken = token;
+  const el = document.getElementById('tokenStatus');
+  if (token) {
+    el.textContent = token;
+    el.className = 'ok';
+  } else {
+    el.textContent = 'nincs bejelentkezve';
+    el.className = 'bad';
+  }
+}
+
+function clearToken() {
+  setToken(null);
+}
+
+// ============ FETCH HELPER ============
+async function apiFetch(path, { method = 'GET', body } = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (jwtToken) headers['Authorization'] = 'Bearer ' + jwtToken;
+
+  try {
+    const res = await fetch(baseUrl() + path, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined
+    });
+    const text = await res.text();
+    let parsed = null;
+    if (text) {
+      try { parsed = JSON.parse(text); } catch (e) { parsed = text; }
+    }
+    return { status: res.status, ok: res.ok, body: parsed };
+  } catch (err) {
+    return { status: 0, ok: false, body: { error: 'Halozati/CORS hiba: ' + err.message } };
+  }
+}
+
+function show(elId, result) {
+  document.getElementById(elId).textContent = JSON.stringify(result, null, 2);
+}
+
+// ============ 1. AUTH ============
+async function doRegister() {
+  const result = await apiFetch('/api/auth/register', {
+    method: 'POST',
+    body: {
+      name: document.getElementById('regName').value,
+      email: document.getElementById('regEmail').value,
+      password: document.getElementById('regPassword').value
+    }
+  });
+  show('registerResult', result);
+}
+
+async function doLogin() {
+  const result = await apiFetch('/api/auth/login', {
+    method: 'POST',
+    body: {
+      email: document.getElementById('loginEmail').value,
+      password: document.getElementById('loginPassword').value
+    }
+  });
+  show('loginResult', result);
+  if (result.ok && result.body && result.body.accessToken) {
+    setToken(result.body.accessToken);
+  }
+}
+
+// ============ 2. SPORTOK ============
+async function loadSports() {
+  const result = await apiFetch('/api/sports');
+  show('sportsResult', result);
+
+  if (result.ok && Array.isArray(result.body)) {
+    cachedSports = [...result.body].sort((a, b) => a.name.localeCompare(b.name));
+
+    const list = document.getElementById('sportsList');
+    list.innerHTML = '';
+    cachedSports.forEach(s => {
+      const li = document.createElement('li');
+      li.textContent = s.name + ' (' + s.id + ')';
+      list.appendChild(li);
+    });
+
+    document.querySelectorAll('select.sport-select').forEach(sel => {
+      const keepFirstBlank = sel.id === 'searchLobbySport';
+      sel.innerHTML = keepFirstBlank ? '<option value="">(mind)</option>' : '';
+      cachedSports.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.name;
+        sel.appendChild(opt);
+      });
+    });
+  }
+}
+
+// ============ 3. SAJAT PROFIL ============
+async function loadMe() {
+  const result = await apiFetch('/api/users/me');
+  show('meResult', result);
+}
+
+async function updateMe() {
+  const result = await apiFetch('/api/users/me', {
+    method: 'PUT',
+    body: {
+      name: document.getElementById('updName').value,
+      city: document.getElementById('updCity').value || null,
+      profilePictureUrl: document.getElementById('updPic').value || null
+    }
+  });
+  show('updateMeResult', result);
+}
+
+async function upsertSportProfile() {
+  const result = await apiFetch('/api/users/me/sport-profiles', {
+    method: 'POST',
+    body: {
+      sportId: document.getElementById('sportProfileSport').value,
+      skillLevel: document.getElementById('sportProfileSkill').value
+    }
+  });
+  show('sportProfileResult', result);
+}
+
+// ============ 4. LOBBYK ============
+async function createLobby() {
+  const skill = document.getElementById('createLobbySkill').value;
+  const result = await apiFetch('/api/lobbies', {
+    method: 'POST',
+    body: {
+      sportId: document.getElementById('createLobbySport').value,
+      title: document.getElementById('createLobbyTitle').value,
+      description: document.getElementById('createLobbyDescription').value,
+      city: document.getElementById('createLobbyCity').value,
+      startTime: document.getElementById('createLobbyStart').value,
+      maxParticipants: Number(document.getElementById('createLobbyMax').value),
+      minSkillLevel: skill || null
+    }
+  });
+  show('createLobbyResult', result);
+  if (result.ok && result.body && result.body.id) {
+    document.getElementById('lobbyActionId').value = result.body.id;
+  }
+}
+
+async function searchLobbies() {
+  const params = new URLSearchParams();
+  const sport = document.getElementById('searchLobbySport').value;
+  const city = document.getElementById('searchLobbyCity').value;
+  const date = document.getElementById('searchLobbyDate').value;
+  const skill = document.getElementById('searchLobbySkill').value;
+  if (sport) params.set('sport', sport);
+  if (city) params.set('city', city);
+  if (date) params.set('date', date);
+  if (skill) params.set('skillLevel', skill);
+
+  const result = await apiFetch('/api/lobbies?' + params.toString());
+  show('searchLobbyResult', result);
+
+  const table = document.getElementById('lobbyTable');
+  const tbody = table.querySelector('tbody');
+  tbody.innerHTML = '';
+  if (result.ok && Array.isArray(result.body) && result.body.length > 0) {
+    table.style.display = '';
+    result.body.forEach(l => {
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + l.id + '</td>' +
+        '<td>' + l.title + '</td>' +
+        '<td>' + (l.sport ? l.sport.name : '') + '</td>' +
+        '<td>' + l.city + '</td>' +
+        '<td>' + l.startTime + '</td>' +
+        '<td>' + l.currentParticipants + '/' + l.maxParticipants + '</td>' +
+        '<td>' + l.status + '</td>';
+      tbody.appendChild(tr);
+    });
+  } else {
+    table.style.display = 'none';
+  }
+}
+
+function currentLobbyActionId() {
+  return document.getElementById('lobbyActionId').value.trim();
+}
+
+async function lobbyDetails() {
+  const result = await apiFetch('/api/lobbies/' + currentLobbyActionId());
+  show('lobbyActionResult', result);
+}
+
+async function lobbyParticipants() {
+  const result = await apiFetch('/api/lobbies/' + currentLobbyActionId() + '/participants');
+  show('lobbyActionResult', result);
+}
+
+async function lobbyJoin() {
+  const result = await apiFetch('/api/lobbies/' + currentLobbyActionId() + '/join', { method: 'POST' });
+  show('lobbyActionResult', result);
+}
+
+async function lobbyLeave() {
+  const result = await apiFetch('/api/lobbies/' + currentLobbyActionId() + '/leave', { method: 'POST' });
+  show('lobbyActionResult', result);
+}
+
+async function lobbyDelete() {
+  const result = await apiFetch('/api/lobbies/' + currentLobbyActionId(), { method: 'DELETE' });
+  show('lobbyActionResult', result);
+}
+
+async function acceptParticipant() {
+  const lobbyId = document.getElementById('participantLobbyId').value.trim();
+  const userId = document.getElementById('participantUserId').value.trim();
+  const result = await apiFetch('/api/lobbies/' + lobbyId + '/participants/' + userId + '/accept', { method: 'POST' });
+  show('participantActionResult', result);
+}
+
+async function declineParticipant() {
+  const lobbyId = document.getElementById('participantLobbyId').value.trim();
+  const userId = document.getElementById('participantUserId').value.trim();
+  const result = await apiFetch('/api/lobbies/' + lobbyId + '/participants/' + userId + '/decline', { method: 'POST' });
+  show('participantActionResult', result);
+}
+
+// ============ 5. CHAT ============
+async function loadChatHistory() {
+  const lobbyId = document.getElementById('chatHistoryLobbyId').value.trim();
+  const result = await apiFetch('/api/lobbies/' + lobbyId + '/messages');
+  show('chatHistoryResult', result);
+}
+
+function wsStatus(text, isOk) {
+  const el = document.getElementById('wsStatusLine');
+  el.textContent = text;
+  el.className = isOk ? 'ok' : 'bad';
+}
+
+function appendChatMessage(msg) {
+  const li = document.createElement('li');
+  li.textContent = typeof msg === 'string' ? msg : JSON.stringify(msg);
+  const list = document.getElementById('chatLiveMessages');
+  list.appendChild(li);
+  list.scrollTop = list.scrollHeight;
+}
+
+function connectChat() {
+  if (!jwtToken) { alert('Eloszor jelentkezz be (1. Auth szekcio)!'); return; }
+  const lobbyId = document.getElementById('wsLobbyId').value.trim();
+  if (!lobbyId) { alert('Add meg a lobby ID-t!'); return; }
+
+  if (stompClient) {
+    stompClient.deactivate();
+    stompClient = null;
+  }
+
+  const client = new StompJs.Client({
+    webSocketFactory: () => new SockJS(baseUrl() + '/ws'),
+    connectHeaders: { Authorization: 'Bearer ' + jwtToken },
+    reconnectDelay: 0,
+    debug: () => {},
+    onConnect: () => {
+      wsStatus('csatlakozva - felirat: /topic/lobbies/' + lobbyId, true);
+      client.subscribe('/topic/lobbies/' + lobbyId, (message) => {
+        try { appendChatMessage(JSON.parse(message.body)); }
+        catch (e) { appendChatMessage(message.body); }
+      });
+      client.subscribe('/user/queue/errors', (message) => {
+        appendChatMessage('HIBA: ' + message.body);
+      });
+    },
+    onStompError: (frame) => {
+      wsStatus('STOMP hiba: ' + (frame.headers && frame.headers['message']), false);
+    },
+    onWebSocketError: (e) => {
+      wsStatus('WS hiba (nezd meg a CORS/allowedOriginPatterns beallitast is)', false);
+    },
+    onWebSocketClose: () => {
+      wsStatus('kapcsolat lezarva', false);
+    }
+  });
+
+  wsStatus('csatlakozas...', false);
+  client.activate();
+  stompClient = client;
+}
+
+function disconnectChat() {
+  if (stompClient) {
+    stompClient.deactivate();
+    stompClient = null;
+  }
+  wsStatus('lekapcsolva', false);
+}
+
+function sendChatMessage() {
+  if (!stompClient || !stompClient.connected) { alert('Nincs aktiv WS kapcsolat - eloszor csatlakozz!'); return; }
+  const lobbyId = document.getElementById('wsLobbyId').value.trim();
+  const content = document.getElementById('chatMessageInput').value;
+  stompClient.publish({
+    destination: '/app/lobbies/' + lobbyId + '/chat.send',
+    body: JSON.stringify({ content })
+  });
+}
+
+// ============ 6. ERTEKELES ============
+async function submitRating() {
+  const lobbyId = document.getElementById('ratingLobbyId').value.trim();
+  const tags = document.getElementById('ratingTags').value
+    .split(',').map(t => t.trim()).filter(t => t.length > 0);
+
+  const result = await apiFetch('/api/lobbies/' + lobbyId + '/ratings', {
+    method: 'POST',
+    body: {
+      ratedUserId: document.getElementById('ratingUserId').value.trim(),
+      stars: Number(document.getElementById('ratingStars').value),
+      tags: tags,
+      comment: document.getElementById('ratingComment').value,
+      noShow: document.getElementById('ratingNoShow').checked
+    }
+  });
+  show('ratingResult', result);
+}
+
+async function loadUserRatings() {
+  const userId = document.getElementById('userRatingsId').value.trim();
+  const result = await apiFetch('/api/users/' + userId + '/ratings');
+  show('userRatingsResult', result);
+}
+</script>
+</body>
+</html>
