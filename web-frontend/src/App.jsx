@@ -8,7 +8,6 @@ import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import LobbiesPage from './pages/LobbiesPage.jsx';
-import CreateLobbyPage from './pages/CreateLobbyPage.jsx';
 import LobbyDetailPage from './pages/LobbyDetailPage.jsx';
 import LobbyDetailModal from './pages/LobbyDetailModal.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
@@ -36,7 +35,6 @@ export default function App() {
 
           <Route element={<ProtectedRoute />}>
             <Route path="/lobbies" element={<LobbiesPage />} />
-            <Route path="/lobbies/new" element={<CreateLobbyPage />} />
             <Route path="/lobbies/:id" element={<LobbyDetailPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/users/:id" element={<UserProfilePage />} />

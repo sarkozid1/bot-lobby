@@ -1,14 +1,28 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../api/client.js';
+import { useToast } from '../context/ToastContext.jsx';
 import LobbyCard from '../components/LobbyCard.jsx';
 import ErrorBanner from '../components/ErrorBanner.jsx';
 import BottomSheet from '../motion/BottomSheet.jsx';
 import MotionButton from '../motion/MotionButton.jsx';
 
 const EMPTY_FILTERS = { sport: '', city: '', date: '', skillLevel: '' };
+const EMPTY_LOBBY_FORM = {
+  sportId: '',
+  title: '',
+  description: '',
+  city: '',
+  startTime: '',
+  maxParticipants: 4,
+  minSkillLevel: ''
+};
 
 export default function LobbiesPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const toast = useToast();
+
   const [sports, setSports] = useState([]);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [draftFilters, setDraftFilters] = useState(EMPTY_FILTERS);
@@ -16,6 +30,11 @@ export default function LobbiesPage() {
   const [lobbies, setLobbies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState(EMPTY_LOBBY_FORM);
+  const [createError, setCreateError] = useState(null);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     api.sports
@@ -58,6 +77,43 @@ export default function LobbiesPage() {
     setSheetOpen(false);
   }
 
+  function openCreateSheet() {
+    setCreateForm({ ...EMPTY_LOBBY_FORM, sportId: sports[0]?.id ?? '' });
+    setCreateError(null);
+    setCreateOpen(true);
+  }
+
+  function updateCreateForm(field, value) {
+    setCreateForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function handleCreateSubmit(e) {
+    e.preventDefault();
+    setCreateError(null);
+    setCreating(true);
+    try {
+      const created = await api.lobbies.create({
+        sportId: createForm.sportId,
+        title: createForm.title,
+        description: createForm.description || null,
+        city: createForm.city,
+        startTime: createForm.startTime,
+        maxParticipants: Number(createForm.maxParticipants),
+        minSkillLevel: createForm.minSkillLevel || null
+      });
+      setCreateOpen(false);
+      toast.success('Lobby letrehozva!');
+      load(filters);
+      // Ugyanaz a modal-route minta, mint kartyara kattintaskor (lasd LobbyCard) - a lista
+      // a hatterben marad, a friss lobby reszletei felugro modalkent jelennek meg felette.
+      navigate(`/lobbies/${created.id}`, { state: { backgroundLocation: location } });
+    } catch (err) {
+      setCreateError(err);
+    } finally {
+      setCreating(false);
+    }
+  }
+
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
   return (
@@ -68,9 +124,9 @@ export default function LobbiesPage() {
           <MotionButton className="btn-secondary" onClick={openSheet}>
             Szurok{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
           </MotionButton>
-          <Link to="/lobbies/new" className="btn btn-primary">
+          <MotionButton className="btn-primary" onClick={openCreateSheet}>
             + Uj lobby
-          </Link>
+          </MotionButton>
         </div>
       </div>
 
@@ -143,6 +199,95 @@ export default function LobbiesPage() {
             </MotionButton>
             <MotionButton type="submit" className="btn-primary">
               Szurok alkalmazasa
+            </MotionButton>
+          </div>
+        </form>
+      </BottomSheet>
+
+      <BottomSheet open={createOpen} onClose={() => setCreateOpen(false)} title="Uj lobby">
+        <form className="create-lobby-sheet-form" onSubmit={handleCreateSubmit}>
+          <ErrorBanner error={createError} />
+
+          <label>
+            Sport
+            <select required value={createForm.sportId} onChange={(e) => updateCreateForm('sportId', e.target.value)}>
+              {sports.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            Cim
+            <input
+              required
+              value={createForm.title}
+              onChange={(e) => updateCreateForm('title', e.target.value)}
+              placeholder="Focizas pentek este"
+            />
+          </label>
+
+          <label>
+            Leiras
+            <textarea
+              value={createForm.description}
+              onChange={(e) => updateCreateForm('description', e.target.value)}
+              placeholder="Negyen vagyunk, kell meg ketto."
+            />
+          </label>
+
+          <div className="form-row">
+            <label>
+              Varos
+              <input
+                required
+                value={createForm.city}
+                onChange={(e) => updateCreateForm('city', e.target.value)}
+                placeholder="Budapest"
+              />
+            </label>
+            <label>
+              Kezdes
+              <input
+                type="datetime-local"
+                required
+                value={createForm.startTime}
+                onChange={(e) => updateCreateForm('startTime', e.target.value)}
+              />
+            </label>
+          </div>
+
+          <div className="form-row">
+            <label>
+              Max letszam
+              <input
+                type="number"
+                min={1}
+                required
+                value={createForm.maxParticipants}
+                onChange={(e) => updateCreateForm('maxParticipants', e.target.value)}
+              />
+            </label>
+            <label>
+              Min skill szint
+              <select value={createForm.minSkillLevel} onChange={(e) => updateCreateForm('minSkillLevel', e.target.value)}>
+                <option value="">(nincs megkotes)</option>
+                <option value="BEGINNER">Kezdo</option>
+                <option value="INTERMEDIATE">Halado</option>
+                <option value="ADVANCED">Fejlett</option>
+                <option value="PRO">Profi</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="sheet-actions">
+            <MotionButton type="button" className="btn-ghost" onClick={() => setCreateOpen(false)}>
+              Megse
+            </MotionButton>
+            <MotionButton type="submit" className="btn-primary" disabled={creating}>
+              {creating ? 'Letrehozas...' : 'Letrehozas'}
             </MotionButton>
           </div>
         </form>

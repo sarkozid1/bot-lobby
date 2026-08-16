@@ -3,7 +3,6 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { ToastProvider } from './context/ToastContext.jsx';
-import { ThemeProvider } from './context/ThemeContext.jsx';
 import './styles/index.css';
 
 // Nincs React.StrictMode: a dev-modbeli dupla mount/unmount ciklusa osszeakad a Framer Motion
@@ -11,12 +10,10 @@ import './styles/index.css';
 // hatterek DOM-ban ragadtak, lathatatlanul leblokkolva az egesz oldalt kattintasra.
 ReactDOM.createRoot(document.getElementById('root')).render(
   <BrowserRouter>
-    <ThemeProvider>
-      <ToastProvider>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </ToastProvider>
-    </ThemeProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </ToastProvider>
   </BrowserRouter>
 );

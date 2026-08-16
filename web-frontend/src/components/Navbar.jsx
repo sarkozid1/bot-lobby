@@ -1,7 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { IconSettings } from './Icon.jsx';
-import ThemeToggle from './ThemeToggle.jsx';
 
 export default function Navbar() {
   const { user, token, logout } = useAuth();
@@ -25,9 +24,6 @@ export default function Navbar() {
             <NavLink to="/lobbies" className={({ isActive }) => (isActive ? 'active' : '')}>
               Lobbyk
             </NavLink>
-            <NavLink to="/lobbies/new" className={({ isActive }) => (isActive ? 'active' : '')}>
-              Uj lobby
-            </NavLink>
             <NavLink to="/profile" className={({ isActive }) => (isActive ? 'active' : '')}>
               Profilom
             </NavLink>
@@ -35,7 +31,6 @@ export default function Navbar() {
         )}
 
         <div className="navbar-user">
-          <ThemeToggle />
           <NavLink to="/settings" className="navbar-icon-link" title="Backend URL beallitasa" aria-label="Beallitasok">
             <IconSettings size={17} />
           </NavLink>

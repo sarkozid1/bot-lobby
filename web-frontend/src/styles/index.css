@@ -60,10 +60,9 @@
 }
 
 /* ===== Sotet tema ===== */
-/* Ket ut vezet ide: a rendszer preferenciaja (media query, ha nincs kezi felulbiralas),
-   vagy a ThemeToggle altal a <html>-re irt data-theme="dark"/"light" (lasd ThemeContext). */
+/* Kizarolag a rendszer preferenciajat koveti - nincs kezi kapcsolo. */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
+  :root {
     color-scheme: dark;
     --color-bg: #000000;
     --color-surface: #1c1c1e;
@@ -106,49 +105,6 @@
     --skill-pro-bg: rgba(249, 115, 22, 0.18);
     --skill-pro-fg: #fdba74;
   }
-}
-:root[data-theme='dark'] {
-  color-scheme: dark;
-  --color-bg: #000000;
-  --color-surface: #1c1c1e;
-  --color-border: #3a3a3c;
-  --color-hairline: rgba(84, 84, 88, 0.65);
-  --color-text: #f5f5f7;
-  --color-text-muted: #98989d;
-
-  --color-primary: #0a84ff;
-  --color-primary-hover: #409cff;
-  --color-primary-soft: rgba(10, 132, 255, 0.18);
-
-  --color-danger: #ff453a;
-  --color-danger-hover: #ff6961;
-  --color-danger-soft: rgba(255, 69, 58, 0.18);
-
-  --color-success: #30d158;
-  --color-success-soft: rgba(48, 209, 88, 0.16);
-
-  --color-warning: #ff9f0a;
-  --color-warning-soft: rgba(255, 159, 10, 0.18);
-
-  --color-neutral-soft: #2c2c2e;
-
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.55);
-  --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.65);
-
-  --material-nav-bg: rgba(28, 28, 30, 0.72);
-  --material-sheet-bg: rgba(28, 28, 30, 0.85);
-  --material-scrim: rgba(0, 0, 0, 0.55);
-  --material-glass-edge: rgba(255, 255, 255, 0.08);
-
-  --skill-beginner-bg: rgba(99, 102, 241, 0.18);
-  --skill-beginner-fg: #a5b4fc;
-  --skill-intermediate-bg: rgba(14, 165, 233, 0.18);
-  --skill-intermediate-fg: #7dd3fc;
-  --skill-advanced-bg: rgba(168, 85, 247, 0.18);
-  --skill-advanced-fg: #d8b4fe;
-  --skill-pro-bg: rgba(249, 115, 22, 0.18);
-  --skill-pro-fg: #fdba74;
 }
 
 * { box-sizing: border-box; }
@@ -215,8 +171,7 @@ h3 { font-size: 15.5px; letter-spacing: -0.005em; margin: 0; }
 .navbar-user { margin-left: auto; display: flex; align-items: center; gap: var(--space-3); }
 .navbar-username { font-weight: 600; font-size: 14px; }
 
-.navbar-icon-link,
-.theme-toggle {
+.navbar-icon-link {
   display: inline-flex; align-items: center; justify-content: center;
   width: 30px; height: 30px; border-radius: 50%;
   color: var(--color-text-muted);
@@ -224,9 +179,7 @@ h3 { font-size: 15.5px; letter-spacing: -0.005em; margin: 0; }
   transition: background 0.15s ease, color 0.15s ease;
   overflow: hidden;
 }
-.navbar-icon-link:hover,
-.theme-toggle:hover { background: var(--color-neutral-soft); color: var(--color-text); text-decoration: none; }
-.theme-toggle-icon { display: inline-flex; }
+.navbar-icon-link:hover { background: var(--color-neutral-soft); color: var(--color-text); text-decoration: none; }
 
 .app-content { flex: 1; }
 
@@ -545,7 +498,8 @@ textarea { min-height: 70px; resize: vertical; }
 .sheet-title { margin-bottom: var(--space-4); }
 .sheet-content { overflow-y: auto; }
 
-.filter-sheet-form label { margin-bottom: var(--space-4); }
+.filter-sheet-form label,
+.create-lobby-sheet-form label { margin-bottom: var(--space-4); }
 .sheet-actions { display: flex; gap: var(--space-3); margin-top: var(--space-2); }
 .sheet-actions .btn { flex: 1; }
 
