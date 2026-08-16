@@ -1,7 +1,12 @@
 package com.botlobby.backend.websocket;
 
+import com.botlobby.backend.entity.Lobby;
+import com.botlobby.backend.entity.enums.ParticipantStatus;
+import com.botlobby.backend.repository.LobbyParticipantRepository;
+import com.botlobby.backend.repository.LobbyRepository;
 import com.botlobby.backend.security.CustomUserDetailsService;
 import com.botlobby.backend.security.JwtService;
+import com.botlobby.backend.security.UserPrincipal;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -14,49 +19,107 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.security.Principal;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
- * A STOMP CONNECT frame "Authorization: Bearer <token>" native headerebol hitelesit -
- * a SecurityConfig HTTP szinten permitAll-ozza a /ws/** handshake-et, az uzenet-szintu
- * auth-ot itt vegezzuk. Sikeres hitelesites utan a StompHeaderAccessor-on beallitott
- * user a tovabbi @MessageMapping metodusokban Principal-kent erheto el.
+ * Ket dolgot vegez:
+ * 1. CONNECT: a STOMP CONNECT frame "Authorization: Bearer <token>" native headerebol hitelesit -
+ *    a SecurityConfig HTTP szinten permitAll-ozza a /ws/** handshake-et, az uzenet-szintu
+ *    auth-ot itt vegezzuk. Sikeres hitelesites utan a StompHeaderAccessor-on beallitott
+ *    user a tovabbi @MessageMapping metodusokban Principal-kent erheto el.
+ * 2. SUBSCRIBE: a "/topic/lobbies/{id}" cimre valo feliratkozast is jogosultsaghoz kotjuk
+ *    (csak a lobby szervezoje vagy elfogadott resztvevoi). CONNECT-kor hitelesitett, de
+ *    a lobbyhoz nem tartozo (vagy onnan mar kilepett/elutasitott) felhasznalo enelkul
+ *    barmelyik lobby chatjere fel tudott volna iratkozni es passzivan olvasni azt.
  */
 @Component
 @RequiredArgsConstructor
 public class StompAuthChannelInterceptor implements ChannelInterceptor {
 
     private static final String BEARER_PREFIX = "Bearer ";
+    private static final Pattern LOBBY_TOPIC_PATTERN = Pattern.compile("^/topic/lobbies/([0-9a-fA-F-]{36})$");
 
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
+    private final LobbyRepository lobbyRepository;
+    private final LobbyParticipantRepository lobbyParticipantRepository;
 
     @Override
     public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+        if (accessor == null) {
+            return message;
+        }
 
-        if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
-            String authHeader = accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION);
-            if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
-                throw new MessagingException("Hianyzo Authorization fejlec a WS CONNECT-ben.");
-            }
-
-            String token = authHeader.substring(BEARER_PREFIX.length());
-            try {
-                String email = jwtService.extractEmail(token);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-                if (!jwtService.isTokenValid(token, userDetails)) {
-                    throw new MessagingException("Ervenytelen vagy lejart JWT token.");
-                }
-                var authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                accessor.setUser(authentication);
-            } catch (JwtException | IllegalArgumentException ex) {
-                throw new MessagingException("Ervenytelen JWT token a WS kapcsolathoz.", ex);
-            }
+        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+            authenticate(accessor);
+        } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+            requireLobbyChatAccess(accessor);
         }
 
         return message;
+    }
+
+    private void authenticate(StompHeaderAccessor accessor) {
+        String authHeader = accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION);
+        if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+            throw new MessagingException("Hianyzo Authorization fejlec a WS CONNECT-ben.");
+        }
+
+        String token = authHeader.substring(BEARER_PREFIX.length());
+        try {
+            String email = jwtService.extractEmail(token);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            if (!jwtService.isTokenValid(token, userDetails)) {
+                throw new MessagingException("Ervenytelen vagy lejart JWT token.");
+            }
+            var authentication = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+            accessor.setUser(authentication);
+        } catch (JwtException | IllegalArgumentException ex) {
+            throw new MessagingException("Ervenytelen JWT token a WS kapcsolathoz.", ex);
+        }
+    }
+
+    private void requireLobbyChatAccess(StompHeaderAccessor accessor) {
+        String destination = accessor.getDestination();
+        if (destination == null) {
+            return;
+        }
+
+        Matcher matcher = LOBBY_TOPIC_PATTERN.matcher(destination);
+        if (!matcher.matches()) {
+            return; // nem lobby-chat topic, nincs mit ellenorizni
+        }
+
+        UUID lobbyId = UUID.fromString(matcher.group(1));
+        UUID userId = extractUserId(accessor.getUser());
+
+        Lobby lobby = lobbyRepository.findById(lobbyId)
+                .orElseThrow(() -> new MessagingException("Nincs ilyen lobby."));
+
+        boolean isCreator = lobby.getCreator().getId().equals(userId);
+        boolean isAcceptedParticipant = lobbyParticipantRepository.findByLobbyIdAndUserId(lobbyId, userId)
+                .map(participant -> participant.getStatus() == ParticipantStatus.ACCEPTED)
+                .orElse(false);
+
+        if (!isCreator && !isAcceptedParticipant) {
+            throw new MessagingException("Csak a lobby szervezoje vagy elfogadott resztvevoi feliratkozhatnak a chatre.");
+        }
+    }
+
+    private UUID extractUserId(Principal principal) {
+        if (principal instanceof Authentication authentication
+                && authentication.getPrincipal() instanceof UserPrincipal userPrincipal) {
+            return userPrincipal.getId();
+        }
+        throw new MessagingException("Nincs hitelesitve a WS kapcsolat.");
     }
 }
