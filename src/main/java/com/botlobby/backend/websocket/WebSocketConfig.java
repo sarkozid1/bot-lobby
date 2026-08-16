@@ -1,6 +1,8 @@
 package com.botlobby.backend.websocket;
 
+import com.botlobby.backend.security.SecurityConfig;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -22,10 +24,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final StompAuthChannelInterceptor stompAuthChannelInterceptor;
 
+    @Value("${botlobby.cors.allowed-origins}")
+    private String allowedOrigins;
+
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("*")
+                .setAllowedOriginPatterns(SecurityConfig.parseAllowedOrigins(allowedOrigins).toArray(String[]::new))
                 .withSockJS();
     }
 

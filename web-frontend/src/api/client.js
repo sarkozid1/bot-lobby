@@ -1,6 +1,8 @@
 const BASE_URL_KEY = 'botlobby.baseUrl';
 const TOKEN_KEY = 'botlobby.token';
-const DEFAULT_BASE_URL = 'http://localhost:8080';
+// Build-time env valtozo (production build-nel a deployolt backend URL-je) - a Settings
+// oldalon barmikor felulirhato, ami localStorage-ban tarolodik es elsobbseget elvez.
+const DEFAULT_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 export function getBaseUrl() {
   return localStorage.getItem(BASE_URL_KEY) || DEFAULT_BASE_URL;

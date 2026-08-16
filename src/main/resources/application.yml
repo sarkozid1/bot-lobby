@@ -20,10 +20,15 @@ spring:
     open-in-view: false
 
 server:
-  port: 8080
+  # A tobbseg PaaS (pl. Railway) a PORT env valtozoban adja meg a figyelendo portot.
+  port: ${PORT:8080}
 
 botlobby:
   jwt:
     # NE kerüljön be verziókezelésbe konkrét érték - mindig env változóból/secret store-ból jöjjön (pl. Docker secret, Vault, CI/CD env var).
     secret: ${JWT_SECRET}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}   # alapértelmezés: 24 óra
+  cors:
+    # Vesszovel elvalasztott origin-lista. Fejlesztesben a lokalis frontend, production-ben
+    # a tenyleges deployolt frontend domain(ek) - lasd SecurityConfig / WebSocketConfig.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
