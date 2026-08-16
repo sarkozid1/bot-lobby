@@ -4,6 +4,7 @@ import com.botlobby.backend.dto.user.UserSummaryResponse;
 import com.botlobby.backend.entity.Rating;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,7 +27,7 @@ public record RatingResponse(
                 UserSummaryResponse.from(rating.getRater()),
                 UserSummaryResponse.from(rating.getRatedUser()),
                 rating.getStars(),
-                rating.getTags(),
+                new ArrayList<>(rating.getTags()),
                 rating.getComment(),
                 rating.getNoShow(),
                 rating.getCreatedAt()

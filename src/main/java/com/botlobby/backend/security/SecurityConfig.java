@@ -36,8 +36,12 @@ public class SecurityConfig {
 
     /**
      * Fejlesztoi/teszt-celu CORS: barmilyen origin-rol (pl. a helyi statikus teszt-frontendrol,
-     * file:// vagy python http.server-rol) engedi a hivasokat. Nincs cookie-alapu hitelesites
-     * (Bearer JWT-t hasznalunk), ezert allowCredentials=false mellett is biztonsagos.
+     * file:// vagy python http.server-rol) engedi a hivasokat.
+     * <p>
+     * allowCredentials=true kell, mert a SockJS kliens a "/ws/info" (es a xhr-streaming/polling)
+     * kereseit withCredentials=true-val kuldi - allowCredentials=false mellett a bongeszo elutasitja
+     * ezeket CORS hibaval, es a chat sosem kapcsolodik. setAllowedOriginPatterns (nem setAllowedOrigins)
+     * hasznalataval ez biztonsagosan kombinalhato "*" mintaval is (Spring ezt kifejezetten erre tervezte).
      * Production-be mielobb szukitsd konkret origin(ek)re.
      */
     @Bean
@@ -46,7 +50,7 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(false);
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

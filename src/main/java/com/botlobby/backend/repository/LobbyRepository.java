@@ -30,7 +30,8 @@ public interface LobbyRepository extends JpaRepository<Lobby, UUID> {
     @Query(
             value = """
                     SELECT * FROM lobbies l
-                    WHERE (CAST(:sportId AS uuid) IS NULL OR l.sport_id = CAST(:sportId AS uuid))
+                    WHERE l.status <> 'CANCELLED'
+                      AND (CAST(:sportId AS uuid) IS NULL OR l.sport_id = CAST(:sportId AS uuid))
                       AND (CAST(:city AS varchar) IS NULL OR l.city = CAST(:city AS varchar))
                       AND (CAST(:startOfDay AS timestamp) IS NULL OR l.start_time >= CAST(:startOfDay AS timestamp))
                       AND (CAST(:endOfDay AS timestamp) IS NULL OR l.start_time < CAST(:endOfDay AS timestamp))
