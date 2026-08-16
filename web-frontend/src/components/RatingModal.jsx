@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { api } from '../api/client.js';
 import { RatingStarsInput } from './RatingStars.jsx';
 import ErrorBanner from './ErrorBanner.jsx';
+import BottomSheet from '../motion/BottomSheet.jsx';
+import MotionButton from '../motion/MotionButton.jsx';
+import Switch from '../motion/Switch.jsx';
 
 export default function RatingModal({ lobbyId, targetUser, onClose, onSubmitted }) {
   const [stars, setStars] = useState(5);
@@ -36,9 +39,8 @@ export default function RatingModal({ lobbyId, targetUser, onClose, onSubmitted 
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <form className="modal card" onClick={(e) => e.stopPropagation()} onSubmit={handleSubmit}>
-        <h2>{targetUser.name} ertekelese</h2>
+    <BottomSheet open onClose={onClose} title={`${targetUser.name} ertekelese`}>
+      <form className="rating-sheet-form" onSubmit={handleSubmit}>
         <ErrorBanner error={error} />
 
         <label>
@@ -56,20 +58,17 @@ export default function RatingModal({ lobbyId, targetUser, onClose, onSubmitted 
           <textarea value={comment} onChange={(e) => setComment(e.target.value)} />
         </label>
 
-        <label className="checkbox-label">
-          <input type="checkbox" checked={noShow} onChange={(e) => setNoShow(e.target.checked)} />
-          Nem jelent meg
-        </label>
+        <Switch checked={noShow} onChange={setNoShow} label="Nem jelent meg" />
 
-        <div className="modal-actions">
-          <button type="button" className="btn btn-ghost" onClick={onClose}>
+        <div className="sheet-actions">
+          <MotionButton type="button" className="btn-ghost" onClick={onClose}>
             Megse
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={submitting}>
+          </MotionButton>
+          <MotionButton type="submit" className="btn-primary" disabled={submitting}>
             {submitting ? 'Kuldes...' : 'Ertekeles kuldese'}
-          </button>
+          </MotionButton>
         </div>
       </form>
-    </div>
+    </BottomSheet>
   );
 }

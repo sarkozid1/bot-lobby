@@ -1,33 +1,36 @@
 :root {
-  --color-bg: #f4f6f8;
+  /* iOS system-szinpaletta (light): systemGroupedBackground alap, feher "csoport" feluletek,
+     hajszalvekony elvalasztok box-border helyett, visszafogott systemBlue accent. */
+  --color-bg: #f2f2f7;
   --color-surface: #ffffff;
-  --color-border: #e2e5ea;
-  --color-text: #1a1d23;
-  --color-text-muted: #6b7280;
+  --color-border: #e5e5ea;
+  --color-hairline: rgba(60, 60, 67, 0.29);
+  --color-text: #1c1c1e;
+  --color-text-muted: #8e8e93;
 
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-primary-soft: #eaf0fe;
+  --color-primary: #007aff;
+  --color-primary-hover: #0066d6;
+  --color-primary-soft: #e8f1ff;
 
-  --color-danger: #dc2626;
-  --color-danger-hover: #b91c1c;
-  --color-danger-soft: #fdecec;
+  --color-danger: #ff3b30;
+  --color-danger-hover: #d6291f;
+  --color-danger-soft: #ffece9;
 
-  --color-success: #16a34a;
-  --color-success-soft: #e8f8ee;
+  --color-success: #34c759;
+  --color-success-soft: #e7f9ec;
 
-  --color-warning: #d97706;
-  --color-warning-soft: #fef3e2;
+  --color-warning: #ff9500;
+  --color-warning-soft: #fff3e2;
 
-  --color-neutral-soft: #eef0f3;
+  --color-neutral-soft: #f2f2f7;
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
 
-  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
-  --shadow-md: 0 4px 12px rgba(16, 24, 40, 0.08);
-  --shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.16);
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-md: 0 6px 16px rgba(16, 24, 40, 0.06);
+  --shadow-lg: 0 16px 40px rgba(16, 24, 40, 0.14);
 
   --space-1: 4px;
   --space-2: 8px;
@@ -36,8 +39,116 @@
   --space-5: 24px;
   --space-6: 32px;
 
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  /* Materials: translucens rétegek - a tartalom alattuk gorget, a hatter csak "sejteti" magat. */
+  --material-nav-bg: rgba(255, 255, 255, 0.82);
+  --material-nav-border: var(--color-hairline);
+  --material-sheet-bg: rgba(255, 255, 255, 0.88);
+  --material-scrim: rgba(0, 0, 0, 0.28);
+  --material-glass-edge: rgba(255, 255, 255, 0.6);
+
+  --skill-beginner-bg: #eef2ff;
+  --skill-beginner-fg: #4338ca;
+  --skill-intermediate-bg: #e0f2fe;
+  --skill-intermediate-fg: #0369a1;
+  --skill-advanced-bg: #f3e8ff;
+  --skill-advanced-fg: #7e22ce;
+  --skill-pro-bg: #fff7ed;
+  --skill-pro-fg: #c2410c;
+
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   color-scheme: light;
+}
+
+/* ===== Sotet tema ===== */
+/* Ket ut vezet ide: a rendszer preferenciaja (media query, ha nincs kezi felulbiralas),
+   vagy a ThemeToggle altal a <html>-re irt data-theme="dark"/"light" (lasd ThemeContext). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --color-bg: #000000;
+    --color-surface: #1c1c1e;
+    --color-border: #3a3a3c;
+    --color-hairline: rgba(84, 84, 88, 0.65);
+    --color-text: #f5f5f7;
+    --color-text-muted: #98989d;
+
+    --color-primary: #0a84ff;
+    --color-primary-hover: #409cff;
+    --color-primary-soft: rgba(10, 132, 255, 0.18);
+
+    --color-danger: #ff453a;
+    --color-danger-hover: #ff6961;
+    --color-danger-soft: rgba(255, 69, 58, 0.18);
+
+    --color-success: #30d158;
+    --color-success-soft: rgba(48, 209, 88, 0.16);
+
+    --color-warning: #ff9f0a;
+    --color-warning-soft: rgba(255, 159, 10, 0.18);
+
+    --color-neutral-soft: #2c2c2e;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.55);
+    --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.65);
+
+    --material-nav-bg: rgba(28, 28, 30, 0.72);
+    --material-sheet-bg: rgba(28, 28, 30, 0.85);
+    --material-scrim: rgba(0, 0, 0, 0.55);
+    --material-glass-edge: rgba(255, 255, 255, 0.08);
+
+    --skill-beginner-bg: rgba(99, 102, 241, 0.18);
+    --skill-beginner-fg: #a5b4fc;
+    --skill-intermediate-bg: rgba(14, 165, 233, 0.18);
+    --skill-intermediate-fg: #7dd3fc;
+    --skill-advanced-bg: rgba(168, 85, 247, 0.18);
+    --skill-advanced-fg: #d8b4fe;
+    --skill-pro-bg: rgba(249, 115, 22, 0.18);
+    --skill-pro-fg: #fdba74;
+  }
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #000000;
+  --color-surface: #1c1c1e;
+  --color-border: #3a3a3c;
+  --color-hairline: rgba(84, 84, 88, 0.65);
+  --color-text: #f5f5f7;
+  --color-text-muted: #98989d;
+
+  --color-primary: #0a84ff;
+  --color-primary-hover: #409cff;
+  --color-primary-soft: rgba(10, 132, 255, 0.18);
+
+  --color-danger: #ff453a;
+  --color-danger-hover: #ff6961;
+  --color-danger-soft: rgba(255, 69, 58, 0.18);
+
+  --color-success: #30d158;
+  --color-success-soft: rgba(48, 209, 88, 0.16);
+
+  --color-warning: #ff9f0a;
+  --color-warning-soft: rgba(255, 159, 10, 0.18);
+
+  --color-neutral-soft: #2c2c2e;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.65);
+
+  --material-nav-bg: rgba(28, 28, 30, 0.72);
+  --material-sheet-bg: rgba(28, 28, 30, 0.85);
+  --material-scrim: rgba(0, 0, 0, 0.55);
+  --material-glass-edge: rgba(255, 255, 255, 0.08);
+
+  --skill-beginner-bg: rgba(99, 102, 241, 0.18);
+  --skill-beginner-fg: #a5b4fc;
+  --skill-intermediate-bg: rgba(14, 165, 233, 0.18);
+  --skill-intermediate-fg: #7dd3fc;
+  --skill-advanced-bg: rgba(168, 85, 247, 0.18);
+  --skill-advanced-fg: #d8b4fe;
+  --skill-pro-bg: rgba(249, 115, 22, 0.18);
+  --skill-pro-fg: #fdba74;
 }
 
 * { box-sizing: border-box; }
@@ -48,24 +159,41 @@ body {
   margin: 0;
   background: var(--color-bg);
   color: var(--color-text);
+  font-size: 15.5px;
   -webkit-font-smoothing: antialiased;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 a { color: var(--color-primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-h1 { font-size: 26px; margin: 0 0 var(--space-4); }
-h2 { font-size: 18px; margin: 0 0 var(--space-3); }
-h3 { font-size: 15px; margin: 0; }
+/* Tipografia: nagy szoveg -> szukebb tracking + szorosabb sortav; kicsi szoveg -> kozel 0 tracking. */
+h1 {
+  font-size: clamp(26px, 5vw, 34px);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+  margin: 0 0 var(--space-4);
+}
+h2 {
+  font-size: 19px;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  font-weight: 650;
+  margin: 0 0 var(--space-3);
+}
+h3 { font-size: 15.5px; letter-spacing: -0.005em; margin: 0; }
 
-.muted { color: var(--color-text-muted); font-size: 13px; }
+.muted { color: var(--color-text-muted); font-size: 13px; letter-spacing: 0.005em; }
 
 /* ===== App shell ===== */
 .app-shell { min-height: 100%; display: flex; flex-direction: column; }
 
 .navbar {
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--material-nav-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 0.5px solid var(--material-nav-border);
   position: sticky;
   top: 0;
   z-index: 20;
@@ -78,87 +206,121 @@ h3 { font-size: 15px; margin: 0; }
   align-items: center;
   gap: var(--space-5);
 }
-.navbar-brand { font-weight: 700; font-size: 18px; color: var(--color-text); }
+.navbar-brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; letter-spacing: -0.015em; color: var(--color-text); }
 .navbar-brand:hover { text-decoration: none; }
+.navbar-brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-primary); flex-shrink: 0; }
 .navbar-links { display: flex; gap: var(--space-4); flex: 1; }
 .navbar-links a { color: var(--color-text-muted); font-weight: 500; font-size: 14px; padding: 6px 2px; border-bottom: 2px solid transparent; }
 .navbar-links a.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
 .navbar-user { margin-left: auto; display: flex; align-items: center; gap: var(--space-3); }
 .navbar-username { font-weight: 600; font-size: 14px; }
-.navbar-settings { font-size: 16px; opacity: 0.7; }
-.navbar-settings:hover { opacity: 1; text-decoration: none; }
+
+.navbar-icon-link,
+.theme-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  color: var(--color-text-muted);
+  background: transparent; border: none; cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  overflow: hidden;
+}
+.navbar-icon-link:hover,
+.theme-toggle:hover { background: var(--color-neutral-soft); color: var(--color-text); text-decoration: none; }
+.theme-toggle-icon { display: inline-flex; }
 
 .app-content { flex: 1; }
 
 /* ===== Page layout ===== */
 .page { max-width: 1100px; margin: 0 auto; padding: var(--space-5) 20px 60px; }
 .page-narrow { max-width: 640px; }
-.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); }
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); gap: var(--space-3); flex-wrap: wrap; }
+.page-header-actions { display: flex; gap: var(--space-2); }
 .page-loading { text-align: center; padding: 60px 20px; color: var(--color-text-muted); }
 .empty-state { color: var(--color-text-muted); font-size: 14px; padding: var(--space-3) 0; }
-.back-link { display: inline-block; margin-bottom: var(--space-4); font-size: 14px; color: var(--color-text-muted); }
+.back-link { display: inline-flex; align-items: center; gap: 4px; margin-bottom: var(--space-4); font-size: 14px; color: var(--color-text-muted); }
 
 /* ===== Cards ===== */
 .card {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: 0.5px solid var(--color-hairline);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: var(--space-5);
   margin-bottom: var(--space-4);
 }
 
-/* ===== Buttons ===== */
+/* ===== Buttons (iOS-szeru: toltott pill elsodleges, sima szoveges "plain" ghost) ===== */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  padding: 9px 16px;
-  font-size: 14px;
+  border: none;
+  border-radius: 980px;
+  padding: 10px 18px;
+  font-size: 15px;
   font-weight: 600;
+  letter-spacing: -0.005em;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  transition: background 0.15s ease, opacity 0.15s ease;
 }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-sm { padding: 5px 10px; font-size: 12.5px; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-sm { padding: 6px 12px; font-size: 13px; }
 .btn-block { width: 100%; }
 
 .btn-primary { background: var(--color-primary); color: #fff; }
 .btn-primary:hover:not(:disabled) { background: var(--color-primary-hover); }
 
-.btn-secondary { background: var(--color-neutral-soft); color: var(--color-text); border-color: var(--color-border); }
+.btn-secondary { background: var(--color-neutral-soft); color: var(--color-text); }
 .btn-secondary:hover:not(:disabled) { background: var(--color-border); }
 
-.btn-ghost { background: transparent; color: var(--color-text-muted); border-color: var(--color-border); }
-.btn-ghost:hover:not(:disabled) { background: var(--color-neutral-soft); color: var(--color-text); }
+.btn-ghost { background: transparent; color: var(--color-primary); padding-left: 10px; padding-right: 10px; }
+.btn-ghost:hover:not(:disabled) { background: var(--color-primary-soft); }
 
-.btn-danger { background: var(--color-danger-soft); color: var(--color-danger); border-color: #f5c6c6; }
+.btn-danger { background: var(--color-danger-soft); color: var(--color-danger); }
 .btn-danger:hover:not(:disabled) { background: var(--color-danger); color: #fff; }
 
 /* ===== Forms ===== */
 label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: var(--color-text-muted); margin-bottom: var(--space-3); }
 input, select, textarea {
   font-family: inherit;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 400;
   color: var(--color-text);
-  padding: 9px 11px;
-  border: 1px solid var(--color-border);
+  padding: 10px 12px;
+  border: none;
   border-radius: var(--radius-sm);
-  background: var(--color-surface);
+  background: var(--color-neutral-soft);
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: box-shadow 0.15s ease;
 }
-input:focus, select:focus, textarea:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
+input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 2px var(--color-primary); }
 textarea { min-height: 70px; resize: vertical; }
 .form-card h2 { margin-top: 0; }
 .form-row { display: flex; gap: var(--space-4); align-items: flex-end; flex-wrap: wrap; }
 .form-row label { flex: 1; min-width: 160px; }
 .checkbox-label { flex-direction: row; align-items: center; gap: 8px; font-weight: 500; }
 .checkbox-label input { width: auto; }
+
+/* ===== iOS-stilusu switch ===== */
+.switch-row {
+  flex-direction: row; align-items: center; justify-content: space-between;
+  gap: var(--space-3); font-weight: 500; color: var(--color-text);
+  margin-bottom: var(--space-4); cursor: pointer;
+}
+.switch {
+  position: relative; width: 42px; height: 24px;
+  border-radius: 999px; background: var(--color-border);
+  flex-shrink: 0; cursor: pointer;
+}
+.switch-on { background: var(--color-success); }
+.switch-knob {
+  position: absolute; top: 2px; left: 2px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.rating-sheet-form label { margin-bottom: var(--space-4); }
 
 /* ===== Auth ===== */
 .auth-page { display: flex; justify-content: center; padding: 60px 20px; }
@@ -174,7 +336,7 @@ textarea { min-height: 70px; resize: vertical; }
 .lobby-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-4); }
 .lobby-card {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: 0.5px solid var(--color-hairline);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: var(--space-4);
@@ -196,8 +358,11 @@ textarea { min-height: 70px; resize: vertical; }
 .lobby-card-heading h3 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lobby-card-sub { margin: 2px 0 0; font-size: 12.5px; color: var(--color-text-muted); }
 .lobby-card-body { display: flex; flex-wrap: wrap; gap: var(--space-3); font-size: 13px; color: var(--color-text-muted); align-items: center; }
+.lobby-card-stat { display: inline-flex; align-items: center; gap: 5px; }
+.lobby-card-stat svg { flex-shrink: 0; opacity: 0.75; }
 .lobby-slots-full { color: var(--color-danger); font-weight: 600; }
-.lobby-card-footer { font-size: 12.5px; color: var(--color-text-muted); border-top: 1px solid var(--color-border); padding-top: var(--space-2); }
+.lobby-slots-full svg { opacity: 1; }
+.lobby-card-footer { font-size: 12.5px; color: var(--color-text-muted); border-top: 0.5px solid var(--color-hairline); padding-top: var(--space-2); }
 
 /* ===== Lobby detail ===== */
 .lobby-detail-header h1 { margin-bottom: var(--space-2); }
@@ -223,10 +388,10 @@ textarea { min-height: 70px; resize: vertical; }
 .badge-participant-declined,
 .badge-participant-left { background: var(--color-danger-soft); color: var(--color-danger); }
 
-.badge-skill-beginner { background: #eef2ff; color: #4338ca; }
-.badge-skill-intermediate { background: #e0f2fe; color: #0369a1; }
-.badge-skill-advanced { background: #f3e8ff; color: #7e22ce; }
-.badge-skill-pro { background: #fff7ed; color: #c2410c; }
+.badge-skill-beginner { background: var(--skill-beginner-bg); color: var(--skill-beginner-fg); }
+.badge-skill-intermediate { background: var(--skill-intermediate-bg); color: var(--skill-intermediate-fg); }
+.badge-skill-advanced { background: var(--skill-advanced-bg); color: var(--skill-advanced-fg); }
+.badge-skill-pro { background: var(--skill-pro-bg); color: var(--skill-pro-fg); }
 
 .badge-noshow { background: var(--color-danger-soft); color: var(--color-danger); }
 
@@ -234,37 +399,76 @@ textarea { min-height: 70px; resize: vertical; }
 .participant-list, .rate-list, .sport-profile-list, .rating-list { list-style: none; margin: 0; padding: 0; }
 .participant-row, .rate-list-row {
   display: flex; align-items: center; gap: var(--space-3);
-  padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border);
+  padding: var(--space-3) 0; border-bottom: 0.5px solid var(--color-hairline);
 }
 .participant-row:last-child, .rate-list-row:last-child { border-bottom: none; }
 .participant-actions { margin-left: auto; display: flex; gap: var(--space-2); }
-.sport-profile-list li { padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border); display: flex; gap: var(--space-2); align-items: center; }
+
+/* ===== Swipeable participant row (accept/decline gesztus) ===== */
+.swipe-row { position: relative; overflow: hidden; border-radius: var(--radius-md); margin-bottom: var(--space-1); }
+.swipe-row-backdrop {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    to right,
+    var(--color-success-soft) 0%, var(--color-success-soft) 50%,
+    var(--color-danger-soft) 50%, var(--color-danger-soft) 100%
+  );
+}
+.swipe-hint { font-weight: 700; font-size: 13px; }
+.swipe-hint-accept { color: var(--color-success); }
+.swipe-hint-decline { color: var(--color-danger); }
+.swipe-row-content {
+  position: relative;
+  background: var(--color-surface);
+  border-bottom: none;
+  touch-action: pan-y;
+  cursor: grab;
+}
+.swipe-row-content:active { cursor: grabbing; }
+.sport-profile-list li { padding: var(--space-3) 0; border-bottom: 0.5px solid var(--color-hairline); display: flex; gap: var(--space-2); align-items: center; }
 
 /* ===== Chat ===== */
 .chat-panel { display: flex; flex-direction: column; gap: var(--space-3); }
-.chat-status { font-size: 12px; color: var(--color-text-muted); }
+.chat-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-muted); }
+.chat-status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-warning); flex-shrink: 0; }
+.chat-status-dot-on { background: var(--color-success); }
 .chat-messages {
   list-style: none; margin: 0; padding: var(--space-3);
   background: var(--color-bg); border-radius: var(--radius-md);
   max-height: 320px; overflow-y: auto;
   display: flex; flex-direction: column; gap: var(--space-2);
 }
-.chat-msg { max-width: 75%; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 6px 10px; font-size: 13.5px; }
-.chat-msg-own { align-self: flex-end; background: var(--color-primary-soft); border-color: var(--color-primary-soft); }
+/* iMessage-szeru buborekok: sajat uzenet = toltott kek, feher szoveg; masoke = vilagosszurke. */
+.chat-msg { max-width: 75%; background: var(--color-border); color: var(--color-text); border: none; border-radius: 18px; padding: 8px 13px; font-size: 14.5px; }
+.chat-msg-own { align-self: flex-end; background: var(--color-primary); color: #fff; }
+.chat-msg-own .chat-msg-author { color: rgba(255, 255, 255, 0.75); }
 .chat-msg-author { display: block; font-size: 11px; font-weight: 700; color: var(--color-text-muted); margin-bottom: 2px; }
 .chat-empty { color: var(--color-text-muted); font-size: 13px; text-align: center; padding: var(--space-3); }
-.chat-input-row { display: flex; gap: var(--space-2); }
-.chat-input-row input { flex: 1; margin: 0; }
+.chat-input-row {
+  display: flex; gap: var(--space-2);
+  position: sticky; bottom: calc(-1 * var(--space-5));
+  padding: var(--space-3);
+  margin: 0 calc(-1 * var(--space-5)) calc(-1 * var(--space-5));
+  background: var(--material-nav-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 0.5px solid var(--material-nav-border);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+.chat-input-row input { flex: 1; margin: 0; background: var(--color-surface); box-shadow: inset 0 0 0 1px var(--color-hairline); }
 
 /* ===== Rating stars ===== */
 .stars { display: inline-flex; gap: 2px; }
-.star { color: #d1d5db; font-size: 18px; line-height: 1; }
-.star-filled { color: #f59e0b; }
+.star { color: var(--color-border); font-size: 18px; line-height: 1; }
+.star-filled { color: var(--color-warning); }
 .stars-sm .star { font-size: 14px; }
 .stars-input .star { background: none; border: none; cursor: pointer; padding: 0; font-size: 22px; }
 
 /* ===== Rating list ===== */
-.rating-list-item { padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border); }
+.rating-list-item { padding: var(--space-3) 0; border-bottom: 0.5px solid var(--color-hairline); }
 .rating-list-item:last-child { border-bottom: none; }
 .rating-list-header { display: flex; align-items: center; gap: var(--space-2); margin-bottom: 4px; }
 .rating-tags { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
@@ -278,8 +482,8 @@ textarea { min-height: 70px; resize: vertical; }
 /* ===== Error banner ===== */
 .error-banner {
   background: var(--color-danger-soft); color: var(--color-danger);
-  border: 1px solid #f5c6c6; border-radius: var(--radius-sm);
-  padding: var(--space-3); font-size: 13.5px; margin-bottom: var(--space-3);
+  border: none; border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4); font-size: 13.5px; margin-bottom: var(--space-3);
 }
 .error-banner ul { margin: 6px 0 0; padding-left: 18px; }
 
@@ -298,7 +502,7 @@ textarea { min-height: 70px; resize: vertical; }
 .toast-error { background: var(--color-danger); }
 .toast-info { background: #334155; }
 
-/* ===== Modal ===== */
+/* ===== Modal (legacy, egyszerubb dialogokhoz) ===== */
 .modal-backdrop {
   position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5);
   display: flex; align-items: center; justify-content: center;
@@ -307,10 +511,105 @@ textarea { min-height: 70px; resize: vertical; }
 .modal { width: 100%; max-width: 420px; margin: 0; }
 .modal-actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-3); }
 
+/* ===== Bottom sheet (huzhato, translucens material) ===== */
+.sheet-backdrop {
+  position: fixed; inset: 0;
+  background: var(--material-scrim);
+  z-index: 60;
+}
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  z-index: 61;
+  max-width: 640px;
+  margin: 0 auto;
+  max-height: min(80vh, 640px);
+  display: flex;
+  flex-direction: column;
+  background: var(--material-sheet-bg);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--material-glass-edge);
+  border-bottom: none;
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -12px 40px rgba(16, 24, 40, 0.22);
+  padding: var(--space-3) var(--space-5) calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+  touch-action: none;
+}
+.sheet-handle {
+  width: 36px; height: 5px;
+  border-radius: 999px;
+  background: rgba(60, 60, 67, 0.3);
+  margin: var(--space-2) auto var(--space-4);
+  flex-shrink: 0;
+}
+.sheet-title { margin-bottom: var(--space-4); }
+.sheet-content { overflow-y: auto; }
+
+.filter-sheet-form label { margin-bottom: var(--space-4); }
+.sheet-actions { display: flex; gap: var(--space-3); margin-top: var(--space-2); }
+.sheet-actions .btn { flex: 1; }
+
+/* ===== Lobby detail modal (kartyabol nyilo, layoutId-vel megosztott atmenet) =====
+   Szandekosan NEM hasznal `transform`-ot a statikus pozicionalashoz (inset+margin:auto),
+   mert a Framer Motion a layout-animaciohoz sajat inline transform-ot ir - a ketto
+   utkozne, ha CSS-bol is transform-mal kozepitenenk. */
+.lobby-modal {
+  position: fixed;
+  inset: 4vh 0;
+  margin: 0 auto;
+  width: min(640px, 92vw);
+  z-index: 61;
+  background: var(--material-sheet-bg);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--material-glass-edge);
+  border-radius: 24px;
+  box-shadow: 0 24px 64px rgba(16, 24, 40, 0.35);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.lobby-modal-topbar {
+  position: sticky; top: 0;
+  display: flex; justify-content: flex-end;
+  padding: var(--space-3) var(--space-4);
+  background: var(--material-nav-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--material-nav-border);
+  flex-shrink: 0;
+}
+.lobby-modal-content { overflow-y: auto; padding: var(--space-5); }
+.lobby-modal-content .card:last-child { margin-bottom: 0; }
+
+@media (max-width: 640px) {
+  .lobby-modal { inset: 0; width: 100%; border-radius: 0; }
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 640px) {
   .navbar-inner { flex-wrap: wrap; }
   .navbar-links { order: 3; width: 100%; justify-content: space-between; }
   .form-row { flex-direction: column; }
   .page-header { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+}
+
+/* ===== Reduced motion / transparency ===== */
+/* A springek/drag animaciok JS oldalon (Framer Motion useReducedMotion) mar rovid
+   cross-fade-re valtanak - itt a tisztan CSS-es reszeket (hover/press szinatmenetek) rovidítjuk. */
+@media (prefers-reduced-motion: reduce) {
+  .btn, .lobby-card { transition-duration: 0.01ms !important; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .navbar, .chat-input-row {
+    background: var(--color-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .sheet, .lobby-modal, .lobby-modal-topbar {
+    background: var(--color-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }

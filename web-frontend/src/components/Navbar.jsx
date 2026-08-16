@@ -1,5 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { IconSettings } from './Icon.jsx';
+import ThemeToggle from './ThemeToggle.jsx';
 
 export default function Navbar() {
   const { user, token, logout } = useAuth();
@@ -14,7 +16,8 @@ export default function Navbar() {
     <header className="navbar">
       <div className="navbar-inner">
         <NavLink to="/lobbies" className="navbar-brand">
-          🏟️ BotLobby
+          <span className="navbar-brand-dot" />
+          BotLobby
         </NavLink>
 
         {token && (
@@ -32,8 +35,9 @@ export default function Navbar() {
         )}
 
         <div className="navbar-user">
-          <NavLink to="/settings" className="navbar-settings" title="Backend URL beallitasa">
-            ⚙️
+          <ThemeToggle />
+          <NavLink to="/settings" className="navbar-icon-link" title="Backend URL beallitasa" aria-label="Beallitasok">
+            <IconSettings size={17} />
           </NavLink>
           {token ? (
             <>
