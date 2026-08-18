@@ -7,6 +7,8 @@ import ErrorBanner from '../components/ErrorBanner.jsx';
 import BottomSheet from '../motion/BottomSheet.jsx';
 import MotionButton from '../motion/MotionButton.jsx';
 
+// "Ures" alapertelmezett ertekek - a szurok visszaallitasakor (Torles gomb) es a kezdeti
+// allapotnal is ide ter vissza az urlap.
 const EMPTY_FILTERS = { sport: '', city: '', date: '', skillLevel: '' };
 const EMPTY_LOBBY_FORM = {
   sportId: '',
@@ -18,12 +20,19 @@ const EMPTY_LOBBY_FORM = {
   minSkillLevel: ''
 };
 
+// A "/lobbies" fooldal: a lobby-lista/racs, a szuro-urlap, ES az "Uj lobby" letrehozo-urlap
+// is EBBEN a komponensben el (mindketto egy-egy BottomSheet-ben, lasd lent) - igy a
+// letrehozas nem kulon oldalra navigal, hanem felugro urlapkent jelenik meg a lista felett.
 export default function LobbiesPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const toast = useToast();
 
   const [sports, setSports] = useState([]);
+  // "filters" a TENYLEGESEN alkalmazott szures (ez alapjan tortenik a lekerdezes), mig
+  // "draftFilters" a szuro-urlapon epp SZERKESZTES ALATT levo, meg nem alkalmazott ertekek -
+  // ezt a ketto elvalasztast az teszi szuksegesse, hogy a felhasznalo module-szeruen
+  // atirogathassa a szurofeltetelt anelkul, hogy minden billentyuleutesnel ujra lekerdezne a listat.
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [draftFilters, setDraftFilters] = useState(EMPTY_FILTERS);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -31,11 +40,15 @@ export default function LobbiesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Kulon allapot-keszlet az "Uj lobby" letrehozo urlaphoz (fuggetlen a szuro-urlaptol).
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState(EMPTY_LOBBY_FORM);
   const [createError, setCreateError] = useState(null);
   const [creating, setCreating] = useState(false);
 
+  // A sportok listaja KETSZER hasznalt ezen az oldalon: a szuro-urlap "Sport" legordulojeben
+  // ES az "Uj lobby" urlap "Sport" legordulojeben is - igy eleg egyszer lekerdezni, mindket
+  // BottomSheet ugyanazt a `sports` allapotot olvassa.
   useEffect(() => {
     api.sports
       .list()
@@ -43,6 +56,8 @@ export default function LobbiesPage() {
       .catch(() => {});
   }, []);
 
+  // useCallback: stabil referencia, hogy a lenti useEffect fuggosegi listajaban ne okozzon
+  // vegtelen ujratoltest.
   const load = useCallback(async (activeFilters) => {
     setLoading(true);
     setError(null);
@@ -56,17 +71,24 @@ export default function LobbiesPage() {
     }
   }, []);
 
+  // Minden alkalommal ujratolti a listat, amikor a TENYLEGESEN alkalmazott `filters`
+  // megvaltozik (nem minden draftFilters-billentyuleutesnel, csak amikor a felhasznalo
+  // ráklikkel a "Szurok alkalmazasa" gombra, lasd applyFilters lent).
   useEffect(() => {
     load(filters);
   }, [filters, load]);
 
   function openSheet() {
+    // A draft mindig a jelenleg ERVENYBEN levo szurokrol indul (nem az ureskent) - ha
+    // ujranyitjak a szuro-sheet-et, a mar beallitott ertekeket latjak, nem egy ures urlapot.
     setDraftFilters(filters);
     setSheetOpen(true);
   }
 
   function applyFilters(e) {
     e.preventDefault();
+    // A draft ertekek innentol "elesbe mennek" - ez valtja ki a fenti useEffect-et, ami
+    // ujratolti a listat.
     setFilters(draftFilters);
     setSheetOpen(false);
   }
@@ -78,6 +100,8 @@ export default function LobbiesPage() {
   }
 
   function openCreateSheet() {
+    // A sport legordulo alapertelmezetten az ELSO betoltott sportra all - ha meg nem toltodott
+    // be egy sport se (sports meg ures), a `sports[0]?.id ?? ''` biztonsagosan ures stringre esik vissza.
     setCreateForm({ ...EMPTY_LOBBY_FORM, sportId: sports[0]?.id ?? '' });
     setCreateError(null);
     setCreateOpen(true);
@@ -98,11 +122,15 @@ export default function LobbiesPage() {
         description: createForm.description || null,
         city: createForm.city,
         startTime: createForm.startTime,
+        // A <input type="number"> mindig String-et ad vissza - Number(...)-rel alakitjuk
+        // szammá, mielott a backendnek kuldenenk (ami Integer-t var, lasd LobbyCreateRequest).
         maxParticipants: Number(createForm.maxParticipants),
         minSkillLevel: createForm.minSkillLevel || null
       });
       setCreateOpen(false);
       toast.success('Lobby letrehozva!');
+      // Ujratoltjuk a listat is (nem csak lokalisan fuzzuk hozza az uj lobbyt) - igy amikor
+      // a felhasznalo bezarja a lent nyilo reszletek-modalt, a friss lobby mar ott van a listaban.
       load(filters);
       // Ugyanaz a modal-route minta, mint kartyara kattintaskor (lasd LobbyCard) - a lista
       // a hatterben marad, a friss lobby reszletei felugro modalkent jelennek meg felette.
@@ -114,6 +142,8 @@ export default function LobbiesPage() {
     }
   }
 
+  // Hany szurofeltetel van eppen aktivan beallitva - ez jelenik meg a "Szurok (N)" gomb
+  // feliraton, hogy a felhasznalo lassa, van-e egyaltalan aktiv szures.
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
   return (
@@ -144,6 +174,7 @@ export default function LobbiesPage() {
         </div>
       )}
 
+      {/* Szuro-urlap felugro sheet-ben. */}
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="Szures">
         <form className="filter-sheet-form" onSubmit={applyFilters}>
           <label>
@@ -204,6 +235,7 @@ export default function LobbiesPage() {
         </form>
       </BottomSheet>
 
+      {/* "Uj lobby" letrehozo urlap - szinten felugro sheet-ben, NEM kulon oldalon. */}
       <BottomSheet open={createOpen} onClose={() => setCreateOpen(false)} title="Uj lobby">
         <form className="create-lobby-sheet-form" onSubmit={handleCreateSubmit}>
           <ErrorBanner error={createError} />

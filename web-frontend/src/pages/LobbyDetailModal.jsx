@@ -24,9 +24,15 @@ export default function LobbyDetailModal() {
 
   function close() {
     setClosing(true);
+    // navigate(-1): egyet lep vissza a bongeszo-elozmenyben - mivel a modal ide egy
+    // navigate(...) hivassal ERKEZETT (lasd LobbyCard.jsx / LobbiesPage.jsx), a "vissza"
+    // pontosan a lista-nezetre visz, ahonnan indultunk.
     navigate(-1);
   }
 
+  // Billentyuzet-vezerles: Escape-re is bezarhato a modal, nem csak a hatterre/X gombra
+  // kattintva. Csak EGYSZER, mountoláskor iratkozik fel az esemenyre (lasd ures [] fuggosegi
+  // listat), es a takaritas-fuggveny (return) leiratkoztat unmountoláskor.
   useEffect(() => {
     function onKeyDown(e) {
       if (e.key === 'Escape') close();
@@ -38,6 +44,7 @@ export default function LobbyDetailModal() {
 
   return (
     <>
+      {/* Hatter-elsotetites - kattintasra bezarja a modalt. */}
       <motion.div
         className="sheet-backdrop"
         style={{ pointerEvents: closing ? 'none' : 'auto' }}
@@ -50,6 +57,9 @@ export default function LobbyDetailModal() {
       <motion.div
         className="lobby-modal"
         style={{ pointerEvents: closing ? 'none' : 'auto' }}
+        // EZ a legfontosabb sor: ugyanaz a layoutId string, mint a LobbyCard-on - a Framer
+        // Motion ebbol ismeri fel, hogy ez a ket elem "ugyanaz", es automatikusan animalja
+        // at a kartya meretebol/pozíciojabol a modal teljes meretere/pozíciojaba.
         layoutId={`lobby-card-${id}`}
         transition={withReducedMotion(springs.structural, reduced)}
       >
@@ -59,6 +69,8 @@ export default function LobbyDetailModal() {
           </button>
         </div>
         <div className="lobby-modal-content">
+          {/* A tenyleges tartalom UGYANAZ a komponens, amit a teljes oldalas
+              LobbyDetailPage is hasznal - itt csak a "keret" (modal/animacio) mas. */}
           <LobbyDetailContent id={id} />
         </div>
       </motion.div>

@@ -20,18 +20,28 @@ export default function LobbyDetailContent({ id }) {
 
   const [lobby, setLobby] = useState(null);
   const [participants, setParticipants] = useState([]);
+  // false, ha a backend 403-at ad a reszvevo-lekerdezesre - lasd lent, hol allitodik.
   const [participantsVisible, setParticipantsVisible] = useState(true);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Egyetlen kozos "foglalt" flag MINDEN akciogombhoz (csatlakozas/elhagyas/elfogadas/
+  // lemondas/stb.) - amig barmelyik muvelet fut, az OSSZES gomb letiltodik, hogy ne
+  // lehessen parhuzamosan tobb, egymasnak ellentmondo kerelmet elinditani.
   const [actionBusy, setActionBusy] = useState(false);
+  // Melyik felhasznalot ertekeljuk eppen (null, ha nincs nyitva a RatingModal).
   const [rateTarget, setRateTarget] = useState(null);
 
+  // useCallback: az `id` valtozasakor uj peldany jon letre, kulonben stabil marad - ezt
+  // hasznalja a lenti useEffect fuggosegkent, es a runAction is ujratoltesre.
   const load = useCallback(async () => {
     setError(null);
     try {
       const lobbyData = await api.lobbies.get(id);
       setLobby(lobbyData);
 
+      // A reszvevo-lista KULON try/catch-ben, mert ennek a lekerdezesnek a 403-a NEM
+      // vegzetes hiba (csak azt jelenti, hogy ennek a felhasznalonak nincs joga latni a
+      // listat) - a lobby alap-adatai ekkor is normalisan megjelennek.
       try {
         const p = await api.lobbies.participants(id);
         setParticipants(p);
@@ -41,7 +51,7 @@ export default function LobbyDetailContent({ id }) {
           setParticipantsVisible(false);
           setParticipants([]);
         } else {
-          throw err;
+          throw err; // barmi mas hiba, az mar a kulso catch-be essen (tenyleges hibaallapot)
         }
       }
     } catch (err) {
@@ -55,11 +65,17 @@ export default function LobbyDetailContent({ id }) {
     load();
   }, [load]);
 
+  // Kozos "vegrehajtas + visszajelzes + ujratoltes" minta minden akciogombhoz (csatlakozas,
+  // elhagyas, elfogadas, elutasitas, lemondas) - igy ezt a mintat csak egyszer kell megirni,
+  // nem minden onClick handler-ben kulon-kulon.
   async function runAction(fn, successMsg) {
     setActionBusy(true);
     try {
       await fn();
       if (successMsg) toast.success(successMsg);
+      // Sikeres muvelet utan MINDIG ujra betoltjuk a teljes lobby-adatot (nem csak lokalisan
+      // modositjuk az allapotot) - igy a letszam/status/reszvevo-lista biztosan a szerver
+      // altal szamolt, friss allapotot tukrozi.
       await load();
     } catch (err) {
       toast.error(err.message);
@@ -76,6 +92,8 @@ export default function LobbyDetailContent({ id }) {
   const isPast = new Date(lobby.startTime) < new Date();
   const start = new Date(lobby.startTime);
 
+  // Kik ertekelhetok: ha ON a szervezo, akkor az OSSZES elfogadott resztvevo (rajta kivul);
+  // ha ON egy resztvevo, akkor a szervezo ES a tobbi elfogadott resztvevo (megint onmagat kiveve).
   const acceptedParticipants = participants.filter((p) => p.status === 'ACCEPTED');
   const rateableUsers = [
     ...(isCreator ? [] : [lobby.creator]),
@@ -103,12 +121,16 @@ export default function LobbyDetailContent({ id }) {
           {lobby.currentParticipants}/{lobby.maxParticipants}
         </p>
 
+        {/* Ket teljesen kulonbozo akcio-keszlet: a szervezo csak lemondhat, mas felhasznalok
+            csatlakozhatnak/kileshetnek - sose latja ugyanaz a felhasznalo mindket keszletet. */}
         <div className="lobby-detail-actions">
           {isCreator ? (
             <MotionButton
               className="btn-danger"
               disabled={actionBusy || lobby.status === 'CANCELLED'}
               onClick={() => {
+                // Egyszeru natic bongeszo-megerositő ablak - nincs sajat, epitett
+                // megerosito-dialogus komponens ehhez az egy, ritkan hasznalt akciohoz.
                 if (window.confirm('Biztosan lemondod ezt a lobbyt?')) {
                   runAction(() => api.lobbies.cancel(id), 'Lobby lemondva.');
                 }
@@ -146,6 +168,9 @@ export default function LobbyDetailContent({ id }) {
         ) : (
           <ul className="participant-list">
             {participants.map((p) =>
+              // A szervezo szamara a MEG FUGGOBEN levo jelentkezok egy specialis, huzhato
+              // (swipe-olhato) sorkent jelennek meg accept/decline gesztussal - minden mas
+              // eseten (mas nezi, vagy mar eldontott statusz) csak egy sima olvashato sor.
               isCreator && p.status === 'PENDING' ? (
                 <SwipeableParticipantRow
                   key={p.id}
@@ -174,6 +199,8 @@ export default function LobbyDetailContent({ id }) {
         <ChatPanel lobbyId={id} />
       </div>
 
+      {/* Az ertekeles-blokk csak akkor jelenik meg, ha (1) latjuk a reszvevo-listat, (2) a
+          lobby idopontja mar elmult, ES (3) van legalabb egy ertekelheto felhasznalo. */}
       {participantsVisible && isPast && rateableUsers.length > 0 && (
         <div className="card">
           <h2>Reszvevok ertekelese</h2>
@@ -190,6 +217,8 @@ export default function LobbyDetailContent({ id }) {
         </div>
       )}
 
+      {/* A RatingModal csak akkor renderelodik, ha VAN kivalasztott ertekelendo felhasznalo -
+          onClose egyszeruen null-ra allitja vissza a rateTarget-et, ami elrejti a modalt. */}
       {rateTarget && (
         <RatingModal
           lobbyId={id}

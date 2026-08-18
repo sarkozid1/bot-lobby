@@ -13,6 +13,9 @@ import LobbyDetailModal from './pages/LobbyDetailModal.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import UserProfilePage from './pages/UserProfilePage.jsx';
 
+// A teljes app "vaza" - a Navbar mindig lathato, alatta valtakoznak az egyes oldalak a
+// React Router <Routes>/<Route> parjaval. Ez a komponens dontia el, MELYIK route-ok
+// vedettek (csak bejelentkezve erhetok el) es hogyan mukodik a kartyabol-nyilo modal minta.
 export default function App() {
   const { token } = useAuth();
   const location = useLocation();
@@ -27,22 +30,40 @@ export default function App() {
     <div className="app-shell">
       <Navbar />
       <main className="app-content">
+        {/* A FO Routes location propja: ha van backgroundLocation, EZT (a "regi", hatterben
+            maradt URL-t) rendereli, NEM a tenyleges aktualis URL-t (ami mar /lobbies/{id}
+            lenne) - igy pl. a lobby-lista komponens (LobbiesPage) MOUNTOLVA marad a
+            hatterben, mikozben a cimsorban mar a lobby reszletek URL-je latszik. */}
         <Routes location={backgroundLocation || location}>
+          {/* Gyoker URL: bejelentkezve a lobbylistara, egyebkent a login oldalra iranyit. */}
           <Route path="/" element={<Navigate to={token ? '/lobbies' : '/login'} replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/settings" element={<SettingsPage />} />
 
+          {/* Ezek a route-ok a ProtectedRoute-on keresztul ERKEZNEK - ha nincs bejelentkezve
+              a felhasznalo, a ProtectedRoute automatikusan a /login-ra iranyit, meg mielott
+              a tenyleges oldalkomponens (LobbiesPage, stb.) egyaltalan renderelodne. */}
           <Route element={<ProtectedRoute />}>
             <Route path="/lobbies" element={<LobbiesPage />} />
+            {/* Teljes oldalas lobby-reszletek - direkt URL-megnyitasra/frissitesre. */}
             <Route path="/lobbies/:id" element={<LobbyDetailPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/users/:id" element={<UserProfilePage />} />
           </Route>
 
+          {/* Barmi mas (nem letezo utvonal) a gyokerre iranyit, ami aztan tovabb iranyit
+              login/lobbies fele az entikentikaltsagtol fuggoen. */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 
+        {/* A modal-reteg: CSAK akkor renderelodik, ha VAN backgroundLocation (azaz kartyarol
+            navigaltunk ide, nem kozvetlen URL-megnyitassal). Ez egy MASODIK, FUGGETLEN
+            <Routes> peldany, ami a TENYLEGES aktualis URL-t nezi (nem a `location` prop-ot
+            kapja meg, mint a fenti) - igy tudja megjeleniteni a LobbyDetailModal-t akkor is,
+            amikor a fenti Routes meg mindig a regi (lista) nezetet mutatja a hatterben.
+            AnimatePresence: lehetove teszi, hogy a modal bezarasakor egy exit-animacio
+            lefusson, mielott a komponens tenylegesen kikerulne a DOM-bol. */}
         {backgroundLocation && (
           <AnimatePresence>
             <Routes>

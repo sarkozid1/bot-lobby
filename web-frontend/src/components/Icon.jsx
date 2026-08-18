@@ -1,16 +1,25 @@
 // Egyseges, minimalista vonalikon-keszlet (24x24 grid, kerekitett vegek), hogy az
 // emoji helyett konzisztens, terminal/OS-fuggetlen ikonografiat hasznaljon az app.
+
+// Kozos "vazlat" komponens - minden ikon ezt hivja, csak a benne levo <path>/<circle>/<rect>
+// vonalrajz kulonbozik. Igy minden ikon garantaltan ugyanazokkal a beallitasokkal
+// (meret-alapertelmezes, vonalvastagsag, kerekitett vegek) rendelkezik, egy helyen valtoztathato.
 function Svg({ size = 18, children, ...props }) {
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 24 24"
+      // fill="none" + stroke="currentColor": az ikonok NEM kitoltott alakzatok, hanem
+      // vonalrajzok, es a szinuk a korulotte levo szoveg szinet oroklik (CSS `color`) - igy
+      // automatikusan igazodnak a vilagos/sotet temahoz kulon beallitas nelkul.
       fill="none"
       stroke="currentColor"
       strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
+      // Dekoracios ikonok, nincs onallo jelentesuk a szoveg/cimke nelkul - kepernyoolvasok
+      // szamara elrejtve (aria-hidden), es sose kapnak billentyuzet-fokuszt (focusable="false").
       aria-hidden="true"
       focusable="false"
       {...props}
@@ -20,6 +29,7 @@ function Svg({ size = 18, children, ...props }) {
   );
 }
 
+// Lobby-kartyakon a datum/ido mellett (lasd LobbyCard.jsx).
 export function IconCalendar(props) {
   return (
     <Svg {...props}>
@@ -29,6 +39,7 @@ export function IconCalendar(props) {
   );
 }
 
+// Lobby-kartyakon a letszam mellett.
 export function IconUsers(props) {
   return (
     <Svg {...props}>
@@ -39,6 +50,8 @@ export function IconUsers(props) {
   );
 }
 
+// (Jelenleg nincs hasznalva - korabban a most mar eltavolitott theme-toggle hasznalta.
+// Itt hagyva, mert onallo, ujrafelhasznalhato ikon-eszkoz, hasonloan a tobbihez.)
 export function IconSun(props) {
   return (
     <Svg {...props}>
@@ -65,6 +78,7 @@ export function IconMonitor(props) {
   );
 }
 
+// Bezaras-gombokon (pl. LobbyDetailModal "Bezaras" gombja).
 export function IconX(props) {
   return (
     <Svg {...props}>
@@ -73,6 +87,8 @@ export function IconX(props) {
   );
 }
 
+// (Jelenleg nincs kozvetlenul hasznalva - a swipe-sorban a "✓" szoveges glyph van hasznalva
+// helyette, de ez keszen all, ha kesobb egysegesiteni kellene azt is ikonra.)
 export function IconCheck(props) {
   return (
     <Svg {...props}>
@@ -81,6 +97,7 @@ export function IconCheck(props) {
   );
 }
 
+// A teljes oldalas LobbyDetailPage "Vissza a lobbykhoz" linkjen.
 export function IconChevronLeft(props) {
   return (
     <Svg {...props}>
@@ -89,6 +106,7 @@ export function IconChevronLeft(props) {
   );
 }
 
+// A navbar "Beallitasok" (Settings) linkjen.
 export function IconSettings(props) {
   return (
     <Svg {...props}>

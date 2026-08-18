@@ -13,6 +13,9 @@ export default function LobbyDetailPage() {
       <Link to="/lobbies" className="back-link">
         <IconChevronLeft size={14} /> Vissza a lobbykhoz
       </Link>
+      {/* Ugyanaz a tartalom-komponens, mint a modal valtozatban (LobbyDetailModal.jsx) -
+          igy a lobby-reszletek logikaja EGY helyen van megirva, csak ket kulonbozo
+          "kereteben" (teljes oldal vs. felugro modal) jelenik meg. */}
       <LobbyDetailContent id={id} />
     </div>
   );

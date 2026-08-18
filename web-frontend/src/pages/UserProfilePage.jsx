@@ -4,6 +4,9 @@ import { api } from '../api/client.js';
 import { RatingStarsDisplay } from '../components/RatingStars.jsx';
 import ErrorBanner from '../components/ErrorBanner.jsx';
 
+// Egy MASIK felhasznalo publikus profilja (/users/{id}) - pl. amikor egy lobby szervezojenek
+// vagy reszvevojenek nevere kattintunk. Csak OLVASHATO, nincs szerkesztesi lehetoseg (azt
+// lasd ProfilePage.jsx, ami a SAJAT profilhoz tartozik).
 export default function UserProfilePage() {
   const { id } = useParams();
   const [profile, setProfile] = useState(null);
@@ -11,6 +14,9 @@ export default function UserProfilePage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Az `id` URL-parameter valtozasakor (masik felhasznalo profiljara navigalaskor) ujra
+  // lefut - Promise.all: a ket lekerdezes (profil + ertekelesek) PARHUZAMOSAN indul, nem
+  // egymas utan varva, igy gyorsabb a betoltes.
   useEffect(() => {
     setLoading(true);
     setError(null);

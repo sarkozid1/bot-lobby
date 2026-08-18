@@ -6,8 +6,12 @@ import BottomSheet from '../motion/BottomSheet.jsx';
 import MotionButton from '../motion/MotionButton.jsx';
 import Switch from '../motion/Switch.jsx';
 
+// Egy konkret masik felhasznalo ertekeleset beviteli urlapja - a LobbyDetailContent nyitja
+// meg, amikor a felhasznalo a "Ertekeles" gombra kattint egy lezajlott lobby reszvevojenel.
 export default function RatingModal({ lobbyId, targetUser, onClose, onSubmitted }) {
   const [stars, setStars] = useState(5);
+  // A cimkek egyetlen, vesszovel elvalasztott String mezokent vannak szerkesztve (nem
+  // kulon-kulon input-okkal) - a kuldeskor alakul at listava (lasd handleSubmit).
   const [tags, setTags] = useState('');
   const [comment, setComment] = useState('');
   const [noShow, setNoShow] = useState(false);
@@ -22,6 +26,9 @@ export default function RatingModal({ lobbyId, targetUser, onClose, onSubmitted 
       await api.lobbies.rate(lobbyId, {
         ratedUserId: targetUser.id,
         stars,
+        // "pontos, baratsagos" -> ["pontos", "baratsagos"]: vesszovel bontjuk, minden darabot
+        // trim-elunk (levagjuk a felesleges szokozoket), majd a filter(Boolean) kiszuri az
+        // ures elemeket (pl. ha valaki dupla vesszot irt be veletlenul: "pontos,, gyors").
         tags: tags
           .split(',')
           .map((t) => t.trim())
@@ -39,6 +46,10 @@ export default function RatingModal({ lobbyId, targetUser, onClose, onSubmitted 
   }
 
   return (
+    // `open` prop nincs kiirva -> mindig igaz (JSX-ben egy attributum nev ertek nelkul
+    // automatikusan `true`-t jelent) - ez a BottomSheet mindig NYITOTTAN jelenik meg, amig
+    // a szulo (LobbyDetailContent) egyaltalan renderelí ezt a komponenst (feltetelesen,
+    // csak ha van rateTarget kivalasztva).
     <BottomSheet open onClose={onClose} title={`${targetUser.name} ertekelese`}>
       <form className="rating-sheet-form" onSubmit={handleSubmit}>
         <ErrorBanner error={error} />

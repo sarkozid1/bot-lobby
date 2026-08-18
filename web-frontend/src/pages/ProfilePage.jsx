@@ -6,6 +6,8 @@ import { RatingStarsDisplay } from '../components/RatingStars.jsx';
 import { SkillBadge } from '../components/Badge.jsx';
 import ErrorBanner from '../components/ErrorBanner.jsx';
 
+// A "sajat profilom" oldal (/profile) - adatok szerkesztese + sportprofilok kezelese.
+// Kulonbozik a UserProfilePage-tol (ami MASIK felhasznalok publikus profiljat mutatja).
 export default function ProfilePage() {
   const { user, refreshMe } = useAuth();
   const toast = useToast();
@@ -15,6 +17,8 @@ export default function ProfilePage() {
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Amikor a globalis `user` (AuthContext) betoltodik/frissul, az urlap-mezoket ezzel az
+  // adattal toltjuk fel - igy a felhasznalo a MAR meglevo adatait latja szerkesztesre keszen.
   useEffect(() => {
     if (user) {
       setForm({
@@ -25,11 +29,14 @@ export default function ProfilePage() {
     }
   }, [user]);
 
+  // A sportok listajat egyszer, komponens-mountoláskor toltjuk be (lasd ures [] fuggosegi
+  // listat) - ebbol epul fel a lenti "uj sportprofil" legordulo mezo.
   useEffect(() => {
     api.sports
       .list()
       .then((list) => {
         setSports(list);
+        // Alapertelmezetten az elso sport van kivalasztva a legordulo mezoben.
         if (list.length > 0) setSportForm((prev) => ({ ...prev, sportId: list[0].id }));
       })
       .catch(() => {});
@@ -45,6 +52,8 @@ export default function ProfilePage() {
         city: form.city || null,
         profilePictureUrl: form.profilePictureUrl || null
       });
+      // A sikeres mentes utan ujra lekerjuk a teljes "sajat profilom" adatot a globalis
+      // AuthContext-be, hogy pl. a Navbar-ban is azonnal a friss nev latszodjon.
       await refreshMe();
       toast.success('Profil frissitve.');
     } catch (err) {
@@ -54,6 +63,9 @@ export default function ProfilePage() {
     }
   }
 
+  // KULON urlap/hiba-allapot a sportprofil-hozzaadashoz (nincs kozos error state-tel a
+  // fenti urlappal) - a ket muvelet fuggetlen egymastol, kulon toast.error-ral jelzi a hibat
+  // (nincs sajat ErrorBanner ehhez az urlaphoz).
   async function handleSportSubmit(e) {
     e.preventDefault();
     try {
@@ -65,6 +77,7 @@ export default function ProfilePage() {
     }
   }
 
+  // Amig az AuthContext meg nem toltotte be a felhasznalot, nincs mit megjeleniteni.
   if (!user) return <div className="page-loading">Betoltes...</div>;
 
   return (
@@ -123,6 +136,9 @@ export default function ProfilePage() {
           <p className="empty-state">Meg nincs felvett sportprofilod.</p>
         )}
 
+        {/* Ez az urlap "upsert" - ha a kivalasztott sporthoz mar van profil, csak a
+            skillLevel-t frissiti (lasd backend UserService.upsertSportProfile), nem hoz
+            letre duplikatumot. */}
         <form className="form-row" onSubmit={handleSportSubmit}>
           <select
             value={sportForm.sportId}

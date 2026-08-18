@@ -5,9 +5,12 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import ErrorBanner from '../components/ErrorBanner.jsx';
 
+// A "/login" route tartalma - lasd App.jsx-ben, ez a KEVES nem-vedett (ProtectedRoute nelkuli) oldal egyike.
 export default function LoginPage() {
   const { applyAuth } = useAuth();
   const navigate = useNavigate();
+  // Ha a felhasznalot egy vedett oldalrol (pl. mert lejart a tokene) iranyitottak ide, a
+  // location.state.from megorzi, HOVA kell visszakuldeni sikeres bejelentkezes utan.
   const location = useLocation();
   const toast = useToast();
 
@@ -17,13 +20,18 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e) {
+    // A natic bongeszo-urlapelkuldes megakadalyozasa (ami teljes oldal-ujratoltest okozna) -
+    // helyette JavaScript-bol, fetch-csel kuldjuk el az adatokat.
     e.preventDefault();
     setError(null);
     setSubmitting(true);
     try {
       const result = await api.auth.login({ email, password });
+      // Elmenti a kapott JWT-t es betolti a teljes profilt (lasd AuthContext.applyAuth).
       await applyAuth(result);
       toast.success(`Szia, ${result.name}!`);
+      // replace: true - a bongeszo elozmenyeben a login oldal NEM marad benne, igy a
+      // "vissza" gomb nem viszi vissza ide bejelentkezes utan.
       navigate(location.state?.from || '/lobbies', { replace: true });
     } catch (err) {
       setError(err);

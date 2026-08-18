@@ -5,11 +5,14 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import ErrorBanner from '../components/ErrorBanner.jsx';
 
+// Lasd LoginPage.jsx - nagyon hasonlo szerkezet, csak tobb mezovel es regisztracios hivassal.
 export default function RegisterPage() {
   const { applyAuth } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
 
+  // Egyetlen objektumban tartott urlap-allapot (nem kulon useState minden mezohoz) - a lenti
+  // update(...) segedfuggveny mindig csak egy mezot frissit, a tobbit valtozatlanul hagyva.
   const [form, setForm] = useState({ name: '', email: '', password: '', city: '' });
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -27,8 +30,12 @@ export default function RegisterPage() {
         name: form.name,
         email: form.email,
         password: form.password,
+        // Ures string helyett null-t kuldunk, ha nem toltottek ki a varost - a backend
+        // UserUpdateRequest/RegisterRequest DTO-ja opcionalis mezokent kezeli.
         city: form.city || null
       });
+      // Sikeres regisztracio utan AZONNAL bejelentkezettnek szamit (nincs kulon email-
+      // megerositesi lepes ebben a projektben, lasd AuthService.register a backenden).
       await applyAuth(result);
       toast.success('Sikeres regisztracio!');
       navigate('/lobbies', { replace: true });
