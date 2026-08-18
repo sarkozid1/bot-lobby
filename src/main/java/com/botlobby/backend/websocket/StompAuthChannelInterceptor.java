@@ -38,12 +38,18 @@ import java.util.regex.Pattern;
  *    (csak a lobby szervezoje vagy elfogadott resztvevoi). CONNECT-kor hitelesitett, de
  *    a lobbyhoz nem tartozo (vagy onnan mar kilepett/elutasitott) felhasznalo enelkul
  *    barmelyik lobby chatjere fel tudott volna iratkozni es passzivan olvasni azt.
+ *
+ * A ChannelInterceptor a STOMP vilag megfeleloje a HTTP JwtAuthenticationFilter-nek: az
+ * osszes bejovo uzenet athalad ezen (lasd WebSocketConfig.configureClientInboundChannel),
+ * mielott celba erne barmelyik @MessageMapping metodusnal.
  */
 @Component
 @RequiredArgsConstructor
 public class StompAuthChannelInterceptor implements ChannelInterceptor {
 
     private static final String BEARER_PREFIX = "Bearer ";
+    // Regex, ami a "/topic/lobbies/{UUID}" alaku cimeket ismeri fel, es kicsomagolja belole
+    // a lobby UUID-jet (a zarojeles resz - group(1) - lesz maga az UUID).
     private static final Pattern LOBBY_TOPIC_PATTERN = Pattern.compile("^/topic/lobbies/([0-9a-fA-F-]{36})$");
 
     private final JwtService jwtService;
@@ -51,8 +57,13 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
     private final LobbyRepository lobbyRepository;
     private final LobbyParticipantRepository lobbyParticipantRepository;
 
+    // preSend: a ChannelInterceptor interface fo metodusa, minden STOMP frame-nel (CONNECT,
+    // SUBSCRIBE, SEND, DISCONNECT, stb.) lefut, MIELOTT az uzenet tovabbmenne a csatornaban.
     @Override
     public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
+        // A STOMP-specifikus fejleceket (parancs, cel-cim, sajat headerek) ebbol az
+        // "accessor" objektumbol lehet kiolvasni - ha null, ez nem is egy STOMP frame (nem
+        // kellene elofordulnia, de biztonsagi ellenorzeskent kezeljuk).
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         if (accessor == null) {
             return message;
@@ -63,13 +74,21 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
         } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
             requireLobbyChatAccess(accessor);
         }
+        // Minden mas parancsnal (pl. SEND) nincs itt tovabbi teendo - a SEND uzenetek
+        // jogosultsagat maga a ChatWebSocketController.sendMessage -> ChatMessageService
+        // ellenorzi ujra, amikor ténylegesen menteni probalja az uzenetet.
 
         return message;
     }
 
+    // Az elso kapcsolodaskor (CONNECT) fut le - kicsomagolja es ellenorzi a JWT-t, majd
+    // beallitja a hitelesitett felhasznalot az accessor-on, hogy a KESOBBI (ugyanazon a
+    // WebSocket-kapcsolaton erkezo) uzenetek mar tudjak, ki kuldte oket.
     private void authenticate(StompHeaderAccessor accessor) {
         String authHeader = accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+            // MessagingException itt: STOMP-vilagban ez a HTTP 401-nek megfelelo dontes -
+            // a kapcsolat elutasitasra kerul, a kliens nem tud csatlakozni.
             throw new MessagingException("Hianyzo Authorization fejlec a WS CONNECT-ben.");
         }
 
@@ -82,12 +101,18 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
             }
             var authentication = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
+            // Ez a legfontosabb sor: az accessor-ra allitott "user" lesz az, amit kesobb a
+            // @MessageMapping metodusok Principal parametere fog megkapni (lasd
+            // ChatWebSocketController.sendMessage).
             accessor.setUser(authentication);
         } catch (JwtException | IllegalArgumentException ex) {
             throw new MessagingException("Ervenytelen JWT token a WS kapcsolathoz.", ex);
         }
     }
 
+    // Minden feliratkozasnal (SUBSCRIBE) fut le - ha a cel-cim egy "/topic/lobbies/{id}"
+    // mintaju lobby-chat topic, ellenorzi, hogy a mar hitelesitett felhasznalo tenyleg
+    // jogosult-e olvasni azt a konkret lobbyt.
     private void requireLobbyChatAccess(StompHeaderAccessor accessor) {
         String destination = accessor.getDestination();
         if (destination == null) {
@@ -105,6 +130,9 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
         Lobby lobby = lobbyRepository.findById(lobbyId)
                 .orElseThrow(() -> new MessagingException("Nincs ilyen lobby."));
 
+        // Ugyanaz a jogosultsagi szabaly, mint a ChatMessageService.requireChatAccess-ben
+        // (REST oldalon) - szandekosan kulon van irva, mert ez a websocket csomagban van,
+        // es nem akarjuk a ket reteget (WS interceptor / service) osszekapcsolni csak emiatt.
         boolean isCreator = lobby.getCreator().getId().equals(userId);
         boolean isAcceptedParticipant = lobbyParticipantRepository.findByLobbyIdAndUserId(lobbyId, userId)
                 .map(participant -> participant.getStatus() == ParticipantStatus.ACCEPTED)

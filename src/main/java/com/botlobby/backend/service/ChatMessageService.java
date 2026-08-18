@@ -19,6 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+// Ezt a service-t KETFELE belepesi pont hivja: a ChatMessageController (REST, elozmeny-betoltes)
+// ES a websocket/ChatWebSocketController (STOMP, elo uzenetkuldes/-fogadas) is - a jogosultsag-
+// ellenorzes (requireChatAccess) igy egy helyen van, nem duplikalodik a ket csatorna kozott.
 @Service
 @RequiredArgsConstructor
 public class ChatMessageService {
@@ -30,8 +33,12 @@ public class ChatMessageService {
     private final LobbyParticipantRepository lobbyParticipantRepository;
     private final ChatMessageRepository chatMessageRepository;
 
+    // Uj uzenet mentese - WebSocket-en erkezo uzenetnel is ez fut le (lasd ChatWebSocketController),
+    // NEM csak REST-en, mert a validacio/jogosultsag ugyanaz kell, hogy legyen barmelyik uton is jott az uzenet.
     @Transactional
     public ChatMessageResponse saveMessage(UUID lobbyId, UUID senderId, String content) {
+        // Kezi validacio (nem @Valid DTO-n keresztul), mert a WebSocket-es hivasi utvonalon
+        // (ChatWebSocketController) nincs automatikus Bean Validation, mint a REST controllereknel.
         if (content == null || content.isBlank()) {
             throw new ConflictException("Az uzenet nem lehet ures.");
         }
@@ -52,6 +59,9 @@ public class ChatMessageService {
         return ChatMessageResponse.from(chatMessageRepository.save(message));
     }
 
+    // readOnly = true: teljesitmeny-optimalizacio - jelzi a tranzakciokezelonek/Hibernate-nek,
+    // hogy ebben a metodusban nem lesz irasi muvelet, igy nem kell "piszkos" (dirty-checking)
+    // allapotkövetest vegeznie a betoltott entitasokon.
     @Transactional(readOnly = true)
     public List<ChatMessageResponse> getHistory(UUID lobbyId, UUID requesterId) {
         Lobby lobby = findLobbyOrThrow(lobbyId);
@@ -66,6 +76,9 @@ public class ChatMessageService {
     // a meg fuggoben levo (PENDING) jelentkezoknek nincs hozzaferese, amig a szervezo el nem fogadja oket.
     private void requireChatAccess(Lobby lobby, UUID userId) {
         boolean isCreator = lobby.getCreator().getId().equals(userId);
+        // .map(...).orElse(false): ha EGYALTALAN NINCS jelentkezese ennek a felhasznalonak
+        // ehhez a lobbyhoz (pl. sose jelentkezett), az Optional ures, es biztonsagosan false-ra
+        // esik vissza - nem kell kulon null-ellenorzes.
         boolean isAcceptedParticipant = lobbyParticipantRepository.findByLobbyIdAndUserId(lobby.getId(), userId)
                 .map(participant -> participant.getStatus() == ParticipantStatus.ACCEPTED)
                 .orElse(false);
@@ -75,6 +88,8 @@ public class ChatMessageService {
         }
     }
 
+    // Kozos segedmetodus - lasd hasonlo mintat minden mas service-ben is (ismetlodes szandekos,
+    // mert mindegyik service sajat magaban zart, nincs kozos "BaseService" ososztaly).
     private Lobby findLobbyOrThrow(UUID lobbyId) {
         return lobbyRepository.findById(lobbyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Nincs ilyen lobby."));

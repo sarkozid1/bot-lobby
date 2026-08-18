@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+// Egy elkuldott ertekeles kimeno alakja - ezt latja a masik felhasznalo a profiljan
+// (UserProfilePage.jsx "Ertekelesek" listaja).
 public record RatingResponse(
         UUID id,
         UUID lobbyId,
@@ -27,6 +29,9 @@ public record RatingResponse(
                 UserSummaryResponse.from(rating.getRater()),
                 UserSummaryResponse.from(rating.getRatedUser()),
                 rating.getStars(),
+                // Uj ArrayList-be masolva, nem a Hibernate-proxy listat adva tovabb kozvetlenul -
+                // igy a JSON-szerializalo egy sima, mar teljesen betoltott listaval dolgozik,
+                // fuggetlenul attol, hogy az eredeti JPA-kapcsolat lazy volt-e.
                 new ArrayList<>(rating.getTags()),
                 rating.getComment(),
                 rating.getNoShow(),

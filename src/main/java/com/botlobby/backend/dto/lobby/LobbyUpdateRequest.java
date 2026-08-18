@@ -9,6 +9,8 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 
+// PUT /api/lobbies/{id} kerelem teste - lasd LobbyCreateRequest.java a mezok magyarazataert
+// (ugyanazok a validacios szabalyok).
 // A sport szandekosan nem szerkesztheto letrehozas utan - uj sporthoz uj lobbyt kell letrehozni.
 public record LobbyUpdateRequest(
         @NotBlank(message = "A cim megadasa kotelezo.")

@@ -21,8 +21,14 @@ import lombok.Setter;
 
 import java.util.UUID;
 
+// Egy felhasznalo egy sporthoz tartozo skill-szintjet tarolja - ez egy tobb-a-tobbhoz
+// kapcsolo tabla (User <-> Sport) EXTRA adattal (a skillLevel), ezert nem sima @ManyToMany,
+// hanem egy sajat entitas ket @ManyToOne kapcsolattal.
 @Entity
 @Table(
+        // Az uniqueConstraints biztositja, hogy egy felhasznalonak egy adott sporthoz csak
+        // EGY profilja lehessen (ne lehessen ketszer felvenni "foci"-t kulonbozo skill-lel).
+        // Erre epit a UserService.upsertSportProfile "insert vagy update" logikaja is.
         name = "user_sport_profiles",
         uniqueConstraints = @UniqueConstraint(name = "uq_user_sport_profiles_user_sport", columnNames = {"user_id", "sport_id"})
 )
@@ -38,18 +44,26 @@ public class UserSportProfile {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
+    // A profil tulajdonosa. FetchType.LAZY: a User objektum csak akkor tolt be az
+    // adatbazisbol, ha ténylegesen hozzaferunk (pl. userSportProfile.getUser().getName()) -
+    // igy egy sportprofil-lista lekerdezese nem huz be feleslegesen teljes User rekordokat.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    // Melyik sportrol van szo.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sport_id", nullable = false)
     private Sport sport;
 
+    // EnumType.STRING: az adatbazisban olvashato szoveg kerul tarolasra (pl. "BEGINNER"),
+    // NEM a Java enum sorszama (ordinal) - igy ha kesobb uj erteket veszunk fel az enum
+    // kozepere, a mar mentett sorok jelentese nem valtozik meg veletlenul.
     @Enumerated(EnumType.STRING)
     @Column(name = "skill_level", nullable = false, length = 20)
     private SkillLevel skillLevel;
 
+    // Lasd User.java - ugyanaz az id-alapu equals/hashCode minta minden entitasnal.
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

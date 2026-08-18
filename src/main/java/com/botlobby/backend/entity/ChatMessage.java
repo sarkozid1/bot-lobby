@@ -19,6 +19,9 @@ import lombok.Setter;
 import java.time.Instant;
 import java.util.UUID;
 
+// Egy lobbyhoz tartozo chatuzenet. A valos idejo kezbesites WebSocket/STOMP-on tortenik
+// (lasd websocket/ChatWebSocketController), de minden uzenet ide is mentodik, hogy uj
+// kapcsolodaskor vissza lehessen tolteni a korabbi beszelgetest (lasd ChatMessageService).
 @Entity
 @Table(name = "chat_messages")
 @Getter
@@ -33,14 +36,17 @@ public class ChatMessage {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
+    // Melyik lobby chat-jehez tartozik.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lobby_id", nullable = false)
     private Lobby lobby;
 
+    // Ki kuldte az uzenetet.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", nullable = false)
     private User sender;
 
+    // Az uzenet szovege - columnDefinition = "TEXT": nincs karakterszam-korlat.
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
@@ -54,6 +60,7 @@ public class ChatMessage {
         }
     }
 
+    // Lasd User.java - ugyanaz az id-alapu equals/hashCode minta minden entitasnal.
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+// Lasd AuthController.java a controller-minta magyarazataert.
+// Egyetlen, hitelesitest igenylo (lasd SecurityConfig .anyRequest().authenticated()), de
+// egyebkent nagyon egyszeru olvaso vegpont: az osszes elerheto sport listaja.
 @RestController
 @RequestMapping("/api/sports")
 @RequiredArgsConstructor

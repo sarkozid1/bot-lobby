@@ -27,11 +27,15 @@ public class UserService {
     private final SportRepository sportRepository;
     private final UserSportProfileRepository userSportProfileRepository;
 
+    // A "sajat profilom" (GET /api/users/me) mogott - a teljes UserResponse-t adja vissza
+    // (email-lel egyutt), mert a hivo mindig maga a bejelentkezett felhasznalo.
     @Transactional(readOnly = true)
     public UserResponse getById(UUID userId) {
         return UserResponse.from(findUserOrThrow(userId));
     }
 
+    // Egy MASIK felhasznalo publikus profilja (GET /api/users/{id}) - szandekosan a szukebb
+    // UserSummaryResponse-t adja vissza, nincs benne email cim.
     @Transactional(readOnly = true)
     public UserSummaryResponse getPublicProfile(UUID userId) {
         return UserSummaryResponse.from(findUserOrThrow(userId));
@@ -40,18 +44,26 @@ public class UserService {
     @Transactional
     public UserResponse updateProfile(UUID userId, UserUpdateRequest request) {
         User user = findUserOrThrow(userId);
+        // JPA "dirty checking": a setterek meghivasa MAGABAN eleg ahhoz, hogy Hibernate a
+        // tranzakcio vegen (commit-kor) UPDATE SQL-t generaljon - nem kell explicit
+        // userRepository.save(user)-t hivni, mert a "user" mar egy managed (kovetett) entitas.
         user.setName(request.name());
         user.setCity(request.city());
         user.setProfilePictureUrl(request.profilePictureUrl());
         return UserResponse.from(user);
     }
 
+    // "Upsert": vagy frissiti a mar letezo sportprofilt, vagy letrehoz egy ujat - a hivo
+    // (UserController) a "created" flag alapjan dönti el, hogy 200-at vagy 201-et adjon vissza.
     @Transactional
     public SportProfileUpsertResult upsertSportProfile(UUID userId, SportProfileRequest request) {
         User user = findUserOrThrow(userId);
         Sport sport = sportRepository.findById(request.sportId())
                 .orElseThrow(() -> new ResourceNotFoundException("Nincs ilyen sport."));
 
+        // Optional.map(...).orElseGet(...): ha VAN mar profil ehhez a sporthoz, a map-ag fut
+        // (csak frissites, created=false); ha NINCS, az orElseGet-ag fut (uj letrehozasa,
+        // created=true). Ez a funkcionalis stilus valtja ki az if/else blokkot.
         return userSportProfileRepository.findByUserIdAndSportId(userId, request.sportId())
                 .map(existing -> {
                     existing.setSkillLevel(request.skillLevel());

@@ -28,6 +28,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+// Az app kozponti entitasa: egy meghirdetett sportesemeny/jatszma, amire mas felhasznalok
+// jelentkezhetnek. Ehhez kapcsolodik a reszvevo-lista (LobbyParticipant), a chat
+// (ChatMessage) es az esemeny utani ertekeles (Rating) is - mindegyik a lobby.id-re mutat.
 @Entity
 @Table(name = "lobbies")
 @Getter
@@ -42,17 +45,23 @@ public class Lobby {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
+    // Milyen sportrol van szo (foci, tenisz, stb.) - lasd Sport.java.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sport_id", nullable = false)
     private Sport sport;
 
+    // Ki hozta letre / szervezi a lobbyt - o kapja a jelentkezesek elfogadasi/elutasitasi jogat
+    // (lasd LobbyService: csak a creator hivhatja az accept/decline/cancel muveleteket).
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id", nullable = false)
     private User creator;
 
+    // Rovid cim, pl. "Focizas pentek este".
     @Column(nullable = false)
     private String title;
 
+    // Hosszabb, opcionalis leiras - columnDefinition = "TEXT": nincs karakterszam-korlat
+    // (a sima @Column varchar-t generalna alapertelmezett hosszal).
     @Column(columnDefinition = "TEXT")
     private String description;
 
@@ -64,13 +73,18 @@ public class Lobby {
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
 
+    // Maximum hany elfogadott reszvevo ferhet bele.
     @Column(name = "max_participants", nullable = false)
     private Integer maxParticipants;
 
+    // Opcionalis minimum skill-kovetelmeny a csatlakozashoz - null eseten nincs megkotes.
     @Enumerated(EnumType.STRING)
     @Column(name = "min_skill_level", length = 20)
     private SkillLevel minSkillLevel;
 
+    // A lobby aktualis allapota (OPEN/FULL/CLOSED/CANCELLED) - lasd LobbyStatus.java a
+    // lehetseges ertekekert, es LobbyService-t, ahol az allapotvaltasok (pl. OPEN -> FULL,
+    // ha betelik a letszam) tortennek.
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Builder.Default
@@ -85,6 +99,8 @@ public class Lobby {
     @Builder.Default
     private List<LobbyParticipant> participants = new ArrayList<>();
 
+    // Letrehozaskor automatikusan kitolti a createdAt-ot, es biztonsagi halokent a status-t is
+    // (ha valahol builder-rel hoznank letre @Builder.Default nelkul, akkor se maradjon null).
     @PrePersist
     void onCreate() {
         if (createdAt == null) {
@@ -95,6 +111,7 @@ public class Lobby {
         }
     }
 
+    // Lasd User.java - ugyanaz az id-alapu equals/hashCode minta minden entitasnal.
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

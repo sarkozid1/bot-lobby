@@ -24,9 +24,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+// Egy esemeny utani ertekeles: valaki (rater) pontoz valaki mast (ratedUser), egy adott
+// lobbyhoz kotve. Ebbol szamolodik a User.reliabilityScore (lasd RatingService).
 @Entity
 @Table(
         name = "ratings",
+        // Ugyanaz a szemely ugyanazt a masik szemelyt ugyanahhoz a lobbyhoz csak egyszer
+        // ertekelheti - ezt a harom-oszlopos egyedi kulcs kenyszeriti ki.
         uniqueConstraints = @UniqueConstraint(
                 name = "uq_ratings_lobby_rater_rated_user",
                 columnNames = {"lobby_id", "rater_id", "rated_user_id"}
@@ -44,21 +48,29 @@ public class Rating {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
+    // Melyik esemenyhez kapcsolodik az ertekeles.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lobby_id", nullable = false)
     private Lobby lobby;
 
+    // Ki adta az ertekelest.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rater_id", nullable = false)
     private User rater;
 
+    // Kit ertekelnek.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rated_user_id", nullable = false)
     private User ratedUser;
 
+    // 1-5 kozotti csillagszam (a validaciot a RatingRequest DTO @Min/@Max annotacioi vegzik,
+    // mielott ez az entitas egyaltalan letrejonne).
     @Column(nullable = false)
     private Integer stars;
 
+    // Szabadon valaszthato cimkek (pl. "pontos", "baratsagos") - kulon tablaban taroljuk
+    // (@ElementCollection), mert egy ertekeleshez tobb cimke is tartozhat, es ezek csak
+    // egyszeru String-ek, nem sajat entitasok.
     @ElementCollection
     @CollectionTable(name = "rating_tags", joinColumns = @JoinColumn(name = "rating_id"))
     @Column(name = "tag", nullable = false, length = 50)
@@ -86,6 +98,7 @@ public class Rating {
         }
     }
 
+    // Lasd User.java - ugyanaz az id-alapu equals/hashCode minta minden entitasnal.
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

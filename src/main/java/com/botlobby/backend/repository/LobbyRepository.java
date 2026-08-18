@@ -10,10 +10,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+// Lasd UserRepository.java a "derived query" minta magyarazataert az egyszeru findBy... metodusokhoz.
+// A search(...) metodus viszont, mivel tobb OPCIONALIS szurofeltetelt kell tudnia kombinalni,
+// mar nem irhato le egyszeru metodusnevvel - ott kezzel irt (native) SQL kell, lasd lent.
 public interface LobbyRepository extends JpaRepository<Lobby, UUID> {
 
+    // Egy adott felhasznalo altal letrehozott/szervezett osszes lobby.
     List<Lobby> findByCreatorId(UUID creatorId);
 
+    // Egy adott varosban, egy adott sporthoz tartozo osszes lobby (jelenleg nincs kozvetlenul
+    // hasznalva egyetlen vegpont mogott sem sem - a tenyleges szures a search(...) metoduson at megy).
     List<Lobby> findByCityAndSportId(String city, UUID sportId);
 
     /**

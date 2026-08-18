@@ -23,8 +23,13 @@ import lombok.Setter;
 import java.time.Instant;
 import java.util.UUID;
 
+// Osszekoti egy User-t egy Lobby-val: ez a "jelentkezes" rekordja, a state-jevel (status)
+// egyutt vegigkoveti a teljes eletciklusat PENDING (jelentkezett) -> ACCEPTED/DECLINED
+// (a szervezo dontott) -> LEFT (a reszvevo kesobb kilepett).
 @Entity
 @Table(
+        // Egy felhasznalo egy lobbyhoz csak egyszer jelentkezhet - ezt az adatbazis kenyszeriti ki,
+        // nem csak a Java-kod (lasd LobbyService.join, ami emiatt is ellenorzi elore a duplikaciot).
         name = "lobby_participants",
         uniqueConstraints = @UniqueConstraint(name = "uq_lobby_participants_lobby_user", columnNames = {"lobby_id", "user_id"})
 )
@@ -40,14 +45,18 @@ public class LobbyParticipant {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
+    // Melyik lobbyhoz tartozik ez a jelentkezes.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lobby_id", nullable = false)
     private Lobby lobby;
 
+    // Ki jelentkezett.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    // A jelentkezes aktualis allapota - uj jelentkezes mindig PENDING-kent indul,
+    // lasd ParticipantStatus.java az osszes lehetseges ertekert.
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Builder.Default
@@ -66,6 +75,7 @@ public class LobbyParticipant {
         }
     }
 
+    // Lasd User.java - ugyanaz az id-alapu equals/hashCode minta minden entitasnal.
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
